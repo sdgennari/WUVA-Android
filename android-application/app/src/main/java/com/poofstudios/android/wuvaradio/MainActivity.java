@@ -9,7 +9,11 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.tritondigital.player.TritonPlayer;
+
 public class MainActivity extends AppCompatActivity {
+
+    TritonPlayer player;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +30,28 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+
+        testInitPlayer();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (player != null) {
+            player.release();
+        }
+    }
+
+    // TODO Remove this method from the activity and put in a service
+    private void testInitPlayer() {
+        Bundle settings = new Bundle();
+        settings.putString(TritonPlayer.SETTINGS_STATION_BROADCASTER, "WUVA");
+        settings.putString(TritonPlayer.SETTINGS_STATION_NAME, "WUVA");
+        settings.putString(TritonPlayer.SETTINGS_STATION_MOUNT, "WUVA");
+
+        player = new TritonPlayer(this, settings);
+        player.play();
     }
 
     @Override
