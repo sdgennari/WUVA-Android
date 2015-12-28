@@ -2,6 +2,8 @@
 
 Website: [Live Radio and Song History](http://player.listenlive.co/46461)
 
+<img src="images/wuva_now_playing_v3.png" width="300px">
+
 ## Triton Digital ##
 
 **[SDK Reference PDF](http://triton-sdk.media.streamtheworld.com/mobile_sdk/TD-Mobile-Android-SDK-2.2.5.pdf)**
