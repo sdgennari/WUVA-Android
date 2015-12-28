@@ -27,4 +27,6 @@ dependencies {
     compile 'com.google.android.gms:play-services-base:8.4.0'
     compile 'com.google.android.gms:play-services-ads:8.4.0'
     compile 'com.android.support:mediarouter-v7:23.1.1'
+    compile 'com.squareup.picasso:picasso:2.5.2'
+    compile 'com.squareup.retrofit:retrofit:2.0.0-beta2'
 }
