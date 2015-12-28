@@ -1,5 +1,6 @@
 package com.poofstudios.android.wuvaradio;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -8,12 +9,13 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
 
 import com.tritondigital.player.TritonPlayer;
 
 public class MainActivity extends AppCompatActivity {
 
-    TritonPlayer player;
+    Button stopButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,27 +33,30 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        testInitPlayer();
+        stopButton = (Button) findViewById(R.id.stop_button);
+        stopButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                stopPlayer();
+            }
+        });
+
+        startPlayer();
+    }
+
+    private void stopPlayer() {
+        stopService(new Intent(this, RadioPlayerService.class));
+    }
+
+    private void startPlayer() {
+        Intent intent = new Intent(this, RadioPlayerService.class);
+        intent.setAction(RadioPlayerService.ACTION_PLAY);
+        startService(intent);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
-        if (player != null) {
-            player.release();
-        }
-    }
-
-    // TODO Remove this method from the activity and put in a service
-    private void testInitPlayer() {
-        Bundle settings = new Bundle();
-        settings.putString(TritonPlayer.SETTINGS_STATION_BROADCASTER, "WUVA");
-        settings.putString(TritonPlayer.SETTINGS_STATION_NAME, "WUVA");
-        settings.putString(TritonPlayer.SETTINGS_STATION_MOUNT, "WUVA");
-
-        player = new TritonPlayer(this, settings);
-        player.play();
     }
 
     @Override
