@@ -34,6 +34,8 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
     private NotificationManager mNotificationManager = null;
     private AudioManager mAudioManager = null;
 
+    private boolean isForeground = false;
+
     public RadioPlayerService() {
     }
 
@@ -48,9 +50,6 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
             int result = mAudioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
             if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
                 startPlayer();
-
-                // Create the system notification
-                startPlayerInForeground();
             } else {
                 Log.d("====", "AudioFocus Gain Not Granted");
             }
@@ -82,24 +81,23 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
             }
         }
         stopForeground(true);
+        isForeground = false;
         super.onDestroy();
     }
 
-    private void startPlayerInForeground() {
+    private Notification createNotification(String ticker, String title, String text) {
         final PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0,
                 new Intent(getApplicationContext(), MainActivity.class),
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
-        // TODO Set default text for player notification
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-        builder.setTicker("WUVA Radio");
-        builder.setContentTitle("Unknown");
-        builder.setContentText("Unknown");
-        builder.setSmallIcon(R.mipmap.ic_launcher);
-        builder.setContentIntent(pendingIntent);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+                .setTicker(ticker)
+                .setContentTitle(title)
+                .setContentText(text)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentIntent(pendingIntent);
 
-        final Notification notification = builder.build();
-        startForeground(NOTIFICATION_ID, notification);
+        return builder.build();
     }
 
     private void stopPlayer() {
@@ -150,17 +148,16 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
                 String title = StringUtils.capitalizeEveryWord(cuePoint.getString(CUE_TITLE));
                 String artist = StringUtils.capitalizeEveryWord(cuePoint.getString(TRACK_ARTIST_NAME));
                 if (title != null && artist != null) {
-                    final PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0,
-                            new Intent(getApplicationContext(), MainActivity.class),
-                            PendingIntent.FLAG_UPDATE_CURRENT);
-
-                    NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
-                            .setContentTitle(title)
-                            .setContentText(artist)
-                            .setTicker(String.format("%s by %s", title, artist))
-                            .setSmallIcon(R.mipmap.ic_launcher)
-                            .setContentIntent(pendingIntent);
-                    mNotificationManager.notify(NOTIFICATION_ID, builder.build());
+                    if (!isForeground) {
+                        // Start service in foreground
+                        Notification notification = createNotification(String.format("%s by %s", title, artist), title, artist);
+                        startForeground(NOTIFICATION_ID, notification);
+                        isForeground = true;
+                    } else {
+                        // Update notification if service already running in foreground
+                        Notification notification = createNotification(String.format("%s by %s", title, artist), title, artist);
+                        mNotificationManager.notify(NOTIFICATION_ID, notification);
+                    }
                 }
             }
         }
