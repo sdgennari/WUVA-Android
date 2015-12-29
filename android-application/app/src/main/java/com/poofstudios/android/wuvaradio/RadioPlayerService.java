@@ -6,15 +6,18 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 
 import com.poofstudios.android.wuvaradio.utils.StringUtils;
 import com.tritondigital.player.MediaPlayer;
 import com.tritondigital.player.TritonPlayer;
 
-public class RadioPlayerService extends Service implements MediaPlayer.OnCuePointReceivedListener {
+public class RadioPlayerService extends Service implements MediaPlayer.OnCuePointReceivedListener,
+        AudioManager.OnAudioFocusChangeListener {
 
     public static final String ACTION_PLAY = "ACTION_PLAY";
     public static final int NOTIFICATION_ID = 777;
@@ -29,6 +32,7 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
 
     private TritonPlayer mPlayer = null;
     private NotificationManager mNotificationManager = null;
+    private AudioManager mAudioManager = null;
 
     public RadioPlayerService() {
     }
@@ -40,8 +44,16 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         }
 
         if (ACTION_PLAY.equals(action)) {
-            createPlayer();
-            startPlayerInForeground();
+            // Requesting audio focus will handle creating the player and playing the stream
+            int result = mAudioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+            if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                startPlayer();
+
+                // Create the system notification
+                startPlayerInForeground();
+            } else {
+                Log.d("====", "AudioFocus Gain Not Granted");
+            }
         }
         return START_NOT_STICKY;
     }
@@ -55,12 +67,20 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
     public void onCreate() {
         super.onCreate();
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
     }
 
     @Override
     public void onDestroy() {
-        stopPlayer();
-        releasePlayer();
+        if (mAudioManager != null) {
+            int result = mAudioManager.abandonAudioFocus(this);
+            if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                stopPlayer();
+                releasePlayer();
+            } else {
+                Log.d("====", "AudioFocus Abandon Not Granted");
+            }
+        }
         stopForeground(true);
         super.onDestroy();
     }
@@ -72,9 +92,9 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
 
         // TODO Set default text for player notification
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-        builder.setTicker("Ticker");
-        builder.setContentTitle("Content title");
-        builder.setContentText("Content text");
+        builder.setTicker("WUVA Radio");
+        builder.setContentTitle("Unknown");
+        builder.setContentText("Unknown");
         builder.setSmallIcon(R.mipmap.ic_launcher);
         builder.setContentIntent(pendingIntent);
 
@@ -83,7 +103,7 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
     }
 
     private void stopPlayer() {
-        if (mPlayer != null) {
+        if (mPlayer != null && mPlayer.getState() == TritonPlayer.STATE_PLAYING) {
             mPlayer.stop();
         }
     }
@@ -93,6 +113,21 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
             mPlayer.release();
             mPlayer = null;
         }
+    }
+
+    private void duckPlayer() {
+        if (mPlayer != null && mPlayer.getState() == TritonPlayer.STATE_PLAYING) {
+            mPlayer.setVolume(TritonPlayer.VOLUME_DUCK);
+        }
+    }
+
+    private void startPlayer() {
+        if (mPlayer == null || mPlayer.getState() == TritonPlayer.STATE_RELEASED) {
+            createPlayer();
+        } else if (mPlayer.getState() != TritonPlayer.STATE_PLAYING) {
+            mPlayer.play();
+        }
+        mPlayer.setVolume(TritonPlayer.VOLUME_NORMAL);
     }
 
     private void createPlayer() {
@@ -128,6 +163,33 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
                     mNotificationManager.notify(NOTIFICATION_ID, builder.build());
                 }
             }
+        }
+    }
+
+    @Override
+    public void onAudioFocusChange(int focusChange) {
+        Log.d("====", "onAudioFocusChange");
+        switch(focusChange) {
+            // Gained focus to play music
+            case AudioManager.AUDIOFOCUS_GAIN:
+                startPlayer();
+                break;
+
+            // Lost focus for a long period of time, so release memory
+            case AudioManager.AUDIOFOCUS_LOSS:
+                stopPlayer();
+                releasePlayer();
+                break;
+
+            // Lost focus for a short time, will regain soon
+            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                stopPlayer();
+                break;
+
+            // Lost focus for a short time, but can still play quietly
+            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+                duckPlayer();
+                break;
         }
     }
 }
