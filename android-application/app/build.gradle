@@ -29,4 +29,6 @@ dependencies {
     compile 'com.android.support:mediarouter-v7:23.1.1'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.squareup.retrofit:retrofit:2.0.0-beta2'
+    compile 'com.squareup.retrofit:converter-gson:2.0.0-beta2'
+    compile 'com.squareup.okhttp:logging-interceptor:2.6.0'
 }

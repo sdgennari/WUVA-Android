@@ -12,9 +12,18 @@ import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
+import com.poofstudios.android.wuvaradio.api.MusicBrainzApi;
+import com.poofstudios.android.wuvaradio.api.MusicBrainzService;
+import com.poofstudios.android.wuvaradio.api.model.RecordingResponse;
 import com.poofstudios.android.wuvaradio.utils.StringUtils;
+import com.poofstudios.android.wuvaradio.utils.UrlUtils;
 import com.tritondigital.player.MediaPlayer;
 import com.tritondigital.player.TritonPlayer;
+
+import retrofit.Call;
+import retrofit.Callback;
+import retrofit.Response;
+import retrofit.Retrofit;
 
 public class RadioPlayerService extends Service implements MediaPlayer.OnCuePointReceivedListener,
         AudioManager.OnAudioFocusChangeListener {
@@ -33,6 +42,7 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
     private TritonPlayer mPlayer = null;
     private NotificationManager mNotificationManager = null;
     private AudioManager mAudioManager = null;
+    private MusicBrainzService musicBrainzService = null;
 
     private boolean isForeground = false;
 
@@ -67,6 +77,9 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         super.onCreate();
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        musicBrainzService = MusicBrainzApi.getService();
+
+        getCoverArt("TALLADEGA", "ERIC CHURCH");
     }
 
     @Override
@@ -139,6 +152,37 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         mPlayer = new TritonPlayer(this, settings);
         mPlayer.setOnCuePointReceivedListener(this);
         mPlayer.play();
+    }
+
+    private void getCoverArt(String title, String artist) {
+        String query = UrlUtils.formatMusicBrainzQuery(title, artist);
+        Call<RecordingResponse> recordingResponseCall = musicBrainzService.getMBID(query);
+        recordingResponseCall.enqueue(new Callback<RecordingResponse>() {
+            @Override
+            public void onResponse(Response<RecordingResponse> response, Retrofit retrofit) {
+                // Response not null
+                if (response != null && response.body() != null) {
+                    RecordingResponse recordingResponse = response.body();
+                    // At least one recording returned
+                    if (recordingResponse.count != 0) {
+                        // Get the first recording
+                        RecordingResponse.Recording recording = recordingResponse.recordings.get(0);
+
+                        // At least one release
+                        if (recording.releases.size() != 0) {
+                            RecordingResponse.Release release = recording.releases.get(0);
+                            // TODO Use albumMBID to get cover art
+                            String albumMBID = release.id;
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                Log.e("WUVA", t.getLocalizedMessage());
+            }
+        });
     }
 
     @Override
