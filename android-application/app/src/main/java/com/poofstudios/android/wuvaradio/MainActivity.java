@@ -1,9 +1,13 @@
 package com.poofstudios.android.wuvaradio;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -11,9 +15,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 
-import com.tritondigital.player.TritonPlayer;
-
 public class MainActivity extends AppCompatActivity {
+
+    private BroadcastReceiver broadcastReceiver;
 
     Button stopButton;
 
@@ -41,6 +45,22 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (intent.getAction().equals(RadioPlayerService.INTENT_UPDATE_COVER_ART)) {
+                    String coverArtUrl = intent.getStringExtra(RadioPlayerService.EXTRA_COVER_ART_URL);
+                    // TODO Update ui
+
+                } else if (intent.getAction().equals(RadioPlayerService.INTENT_UPDATE_TITLE_ARTIST)) {
+                    String title = intent.getStringExtra(RadioPlayerService.EXTRA_TITLE);
+                    String artist = intent.getStringExtra(RadioPlayerService.EXTRA_ARTIST);
+                    // TODO Update ui
+
+                }
+            }
+        };
+
         startPlayer();
     }
 
@@ -52,6 +72,24 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, RadioPlayerService.class);
         intent.setAction(RadioPlayerService.ACTION_PLAY);
         startService(intent);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        // Register the broadcastReceiver
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(RadioPlayerService.INTENT_UPDATE_COVER_ART);
+        intentFilter.addAction(RadioPlayerService.INTENT_UPDATE_TITLE_ARTIST);
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter);
+    }
+
+    @Override
+    protected void onPause() {
+        // Unregister the broadcastReceiver
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
+        super.onPause();
     }
 
     @Override

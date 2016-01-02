@@ -10,6 +10,7 @@ import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.poofstudios.android.wuvaradio.api.MusicBrainzApi;
@@ -20,6 +21,8 @@ import com.poofstudios.android.wuvaradio.utils.UrlUtils;
 import com.tritondigital.player.MediaPlayer;
 import com.tritondigital.player.TritonPlayer;
 
+import java.util.HashMap;
+
 import retrofit.Call;
 import retrofit.Callback;
 import retrofit.Response;
@@ -28,6 +31,14 @@ import retrofit.Retrofit;
 public class RadioPlayerService extends Service implements MediaPlayer.OnCuePointReceivedListener,
         AudioManager.OnAudioFocusChangeListener {
 
+    // LocalBroadcastManager fields
+    public static final String INTENT_UPDATE_COVER_ART = "INTENT_UPDATE_COVER_ART";
+    public static final String INTENT_UPDATE_TITLE_ARTIST = "INTENT_UPDATE_TITLE_ARTIST";
+    public static final String EXTRA_COVER_ART_URL = "EXTRA_COVER_ART_URL";
+    public static final String EXTRA_TITLE = "EXTRA_TITLE";
+    public static final String EXTRA_ARTIST = "EXTRA_ARTIST";
+
+    // Service fields
     public static final String ACTION_PLAY = "ACTION_PLAY";
     public static final int NOTIFICATION_ID = 777;
 
@@ -43,6 +54,7 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
     private NotificationManager mNotificationManager = null;
     private AudioManager mAudioManager = null;
     private MusicBrainzService musicBrainzService = null;
+    private LocalBroadcastManager localBroadcastManager = null;
 
     private boolean isForeground = false;
 
@@ -61,7 +73,7 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
             if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
                 startPlayer();
             } else {
-                Log.d("====", "AudioFocus Gain Not Granted");
+                Log.d("WUVA", "AudioFocus Gain Not Granted");
             }
         }
         return START_NOT_STICKY;
@@ -78,8 +90,9 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         musicBrainzService = MusicBrainzApi.getService();
+        localBroadcastManager = LocalBroadcastManager.getInstance(this);
 
-        getCoverArt("TALLADEGA", "ERIC CHURCH");
+        sendMessage("testEvent", new HashMap<String, String>());
     }
 
     @Override
@@ -90,7 +103,7 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
                 stopPlayer();
                 releasePlayer();
             } else {
-                Log.d("====", "AudioFocus Abandon Not Granted");
+                Log.d("WUVA", "AudioFocus Abandon Not Granted");
             }
         }
         stopForeground(true);
@@ -171,8 +184,12 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
                         // At least one release
                         if (recording.releases.size() != 0) {
                             RecordingResponse.Release release = recording.releases.get(0);
-                            // TODO Use albumMBID to get cover art
-                            String albumMBID = release.id;
+                            String coverArtUrl = UrlUtils.formatCoverArtUrl(release.id);
+
+                            // Send a broadcast with url for cover art image
+                            HashMap<String, String> messageData = new HashMap<>();
+                            messageData.put(EXTRA_COVER_ART_URL, coverArtUrl);
+                            sendMessage(INTENT_UPDATE_COVER_ART, messageData);
                         }
                     }
                 }
@@ -183,6 +200,25 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
                 Log.e("WUVA", t.getLocalizedMessage());
             }
         });
+    }
+
+    public void updateNotificationImage(String coverArtUrl) {
+        // TODO Update notification with picture from coverArtUrl
+    }
+
+    /**
+     * Sends a broadcast from the service to any local activities
+     *
+     * @param eventName Name of the event being broadcast
+     * @param data Extras to be put in the intent
+     */
+    public void sendMessage(String eventName, HashMap<String, String> data) {
+        Intent broadcastIntent = new Intent(eventName);
+        for (String key : data.keySet()) {
+            String value = data.get(key);
+            broadcastIntent.putExtra(key, value);
+        }
+        localBroadcastManager.sendBroadcast(broadcastIntent);
     }
 
     @Override
@@ -202,6 +238,15 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
                         Notification notification = createNotification(String.format("%s by %s", title, artist), title, artist);
                         mNotificationManager.notify(NOTIFICATION_ID, notification);
                     }
+
+                    // Send a broadcast with the new title and artist
+                    HashMap<String, String> messageData = new HashMap<>();
+                    messageData.put(EXTRA_TITLE, title);
+                    messageData.put(EXTRA_ARTIST, title);
+                    sendMessage(INTENT_UPDATE_TITLE_ARTIST, messageData);
+
+                    // Query for the new cover art
+                    getCoverArt(title, artist);
                 }
             }
         }
@@ -209,7 +254,6 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
 
     @Override
     public void onAudioFocusChange(int focusChange) {
-        Log.d("====", "onAudioFocusChange");
         switch(focusChange) {
             // Gained focus to play music
             case AudioManager.AUDIOFOCUS_GAIN:

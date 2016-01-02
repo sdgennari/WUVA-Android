@@ -7,6 +7,15 @@ import java.io.UnsupportedEncodingException;
 public class UrlUtils {
 
     private static final int TITLE_MAX_LENGTH = 27;
+    private static final String COVER_ART_API_BASE = "http://coverartarchive.org/release";
+    private static final String COVER_ART_FORMAT = "front-500";
+
+    public static String formatCoverArtUrl(String MBID) {
+        return String.format("%1s/%2s/%3s",
+                COVER_ART_API_BASE,
+                MBID,
+                COVER_ART_FORMAT);
+    }
 
     public static String formatMusicBrainzQuery(String title, String artist) {
         try {
