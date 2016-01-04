@@ -1,10 +1,13 @@
 package com.poofstudios.android.wuvaradio;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
@@ -18,8 +21,11 @@ import android.widget.Button;
 public class MainActivity extends AppCompatActivity {
 
     private BroadcastReceiver broadcastReceiver;
+    private RadioPlayerService boundRadioPlayerService;
+    private boolean isServiceBound = false;
 
     Button stopButton;
+    Button startButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,11 +43,19 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        startButton = (Button) findViewById(R.id.start_button);
+        startButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startService();
+            }
+        });
+
         stopButton = (Button) findViewById(R.id.stop_button);
         stopButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                stopPlayer();
+                stopService();
             }
         });
 
@@ -60,15 +74,14 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
-
-        startPlayer();
     }
-
-    private void stopPlayer() {
+    private void stopService() {
+        // Must both stop and unbind service to full stop it
         stopService(new Intent(this, RadioPlayerService.class));
+        doUnbindService();
     }
 
-    private void startPlayer() {
+    private void startService() {
         Intent intent = new Intent(this, RadioPlayerService.class);
         intent.setAction(RadioPlayerService.ACTION_PLAY);
         startService(intent);
@@ -78,11 +91,28 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
+        // Bind to the service
+        Intent bindIntent = new Intent(this, RadioPlayerService.class);
+        bindService(bindIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
+
         // Register the broadcastReceiver
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(RadioPlayerService.INTENT_UPDATE_COVER_ART);
         intentFilter.addAction(RadioPlayerService.INTENT_UPDATE_TITLE_ARTIST);
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        doUnbindService();
+    }
+
+    private void doUnbindService() {
+        if (isServiceBound) {
+            unbindService(mServiceConnection);
+            isServiceBound = false;
+        }
     }
 
     @Override
@@ -118,4 +148,21 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+    /**
+     * Defines callbacks for service binding
+     * Passed as a param to bindService()
+     */
+    private ServiceConnection mServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            boundRadioPlayerService = ((RadioPlayerService.LocalBinder) service).getService();
+            isServiceBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            isServiceBound = false;
+        }
+    };
 }

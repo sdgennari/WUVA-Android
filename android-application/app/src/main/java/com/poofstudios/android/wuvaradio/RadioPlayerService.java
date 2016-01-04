@@ -7,6 +7,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
+import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
@@ -50,6 +51,7 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
     private static final String STATION_NAME = "WUVA";
     private static final String STATION_MOUNT = "WUVA";
 
+    private final IBinder mBinder = new LocalBinder();
     private TritonPlayer mPlayer = null;
     private NotificationManager mNotificationManager = null;
     private AudioManager mAudioManager = null;
@@ -57,6 +59,11 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
     private LocalBroadcastManager localBroadcastManager = null;
 
     private boolean isForeground = false;
+    private static final boolean ALLOW_REBIND = true;
+
+    private String currentArtist;
+    private String currentTitle;
+    private String currentCoverArtUrl;
 
     public RadioPlayerService() {
     }
@@ -81,7 +88,17 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
 
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return mBinder;
+    }
+
+    @Override
+    public void onRebind(Intent intent) {
+        super.onRebind(intent);
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        return ALLOW_REBIND;
     }
 
     @Override
@@ -91,8 +108,6 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         musicBrainzService = MusicBrainzApi.getService();
         localBroadcastManager = LocalBroadcastManager.getInstance(this);
-
-        sendMessage("testEvent", new HashMap<String, String>());
     }
 
     @Override
@@ -161,13 +176,28 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         settings.putString(TritonPlayer.SETTINGS_STATION_NAME, STATION_NAME);
         settings.putString(TritonPlayer.SETTINGS_STATION_MOUNT, STATION_MOUNT);
 
-        // Create and start the player
+        // Create and start a new player
+        if (mPlayer != null) {
+            mPlayer.release();
+        }
         mPlayer = new TritonPlayer(this, settings);
         mPlayer.setOnCuePointReceivedListener(this);
         mPlayer.play();
     }
 
-    private void getCoverArt(String title, String artist) {
+    public String getCurrentArtist() {
+        return this.currentArtist;
+    }
+
+    public String getCurrentTitle() {
+        return this.currentTitle;
+    }
+
+    public String getCurrentCoverArtUrl() {
+        return this.currentCoverArtUrl;
+    }
+
+    private void getCoverArtUrl(String title, String artist) {
         String query = UrlUtils.formatMusicBrainzQuery(title, artist);
         Call<RecordingResponse> recordingResponseCall = musicBrainzService.getMBID(query);
         recordingResponseCall.enqueue(new Callback<RecordingResponse>() {
@@ -184,11 +214,11 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
                         // At least one release
                         if (recording.releases.size() != 0) {
                             RecordingResponse.Release release = recording.releases.get(0);
-                            String coverArtUrl = UrlUtils.formatCoverArtUrl(release.id);
+                            currentCoverArtUrl = UrlUtils.formatCoverArtUrl(release.id);
 
                             // Send a broadcast with url for cover art image
                             HashMap<String, String> messageData = new HashMap<>();
-                            messageData.put(EXTRA_COVER_ART_URL, coverArtUrl);
+                            messageData.put(EXTRA_COVER_ART_URL, currentCoverArtUrl);
                             sendMessage(INTENT_UPDATE_COVER_ART, messageData);
                         }
                     }
@@ -202,7 +232,7 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         });
     }
 
-    public void updateNotificationImage(String coverArtUrl) {
+    private void updateNotificationImage(String coverArtUrl) {
         // TODO Update notification with picture from coverArtUrl
     }
 
@@ -212,7 +242,7 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
      * @param eventName Name of the event being broadcast
      * @param data Extras to be put in the intent
      */
-    public void sendMessage(String eventName, HashMap<String, String> data) {
+    private void sendMessage(String eventName, HashMap<String, String> data) {
         Intent broadcastIntent = new Intent(eventName);
         for (String key : data.keySet()) {
             String value = data.get(key);
@@ -228,6 +258,11 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
                 String title = StringUtils.capitalizeEveryWord(cuePoint.getString(CUE_TITLE));
                 String artist = StringUtils.capitalizeEveryWord(cuePoint.getString(TRACK_ARTIST_NAME));
                 if (title != null && artist != null) {
+                    // Update current values
+                    this.currentArtist = artist;
+                    this.currentTitle = title;
+                    this.currentCoverArtUrl = "";     // Reset value until callback received
+
                     if (!isForeground) {
                         // Start service in foreground
                         Notification notification = createNotification(String.format("%s by %s", title, artist), title, artist);
@@ -246,7 +281,7 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
                     sendMessage(INTENT_UPDATE_TITLE_ARTIST, messageData);
 
                     // Query for the new cover art
-                    getCoverArt(title, artist);
+                    getCoverArtUrl(title, artist);  // Callback will set currentCoverArtUrl
                 }
             }
         }
@@ -275,6 +310,13 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
                 duckPlayer();
                 break;
+        }
+    }
+
+    public class LocalBinder extends Binder {
+        RadioPlayerService getService() {
+            // Return this instance of the service to expose public methods
+            return RadioPlayerService.this;
         }
     }
 }
