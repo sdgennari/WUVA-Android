@@ -108,6 +108,10 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         musicBrainzService = MusicBrainzApi.getService();
         localBroadcastManager = LocalBroadcastManager.getInstance(this);
+
+        this.currentArtist = null;
+        this.currentTitle = null;
+        this.currentCoverArtUrl = null;
     }
 
     @Override
@@ -126,15 +130,17 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         super.onDestroy();
     }
 
-    private Notification createNotification(String ticker, String title, String text) {
+    private Notification createNotification() {
+        String ticker = String.format("%s by %s", currentTitle, currentArtist);
+
         final PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0,
                 new Intent(getApplicationContext(), MainActivity.class),
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
                 .setTicker(ticker)
-                .setContentTitle(title)
-                .setContentText(text)
+                .setContentTitle(currentTitle)
+                .setContentText(currentArtist)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentIntent(pendingIntent);
 
@@ -265,19 +271,17 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
 
                     if (!isForeground) {
                         // Start service in foreground
-                        Notification notification = createNotification(String.format("%s by %s", title, artist), title, artist);
-                        startForeground(NOTIFICATION_ID, notification);
+                        startForeground(NOTIFICATION_ID, createNotification());
                         isForeground = true;
                     } else {
                         // Update notification if service already running in foreground
-                        Notification notification = createNotification(String.format("%s by %s", title, artist), title, artist);
-                        mNotificationManager.notify(NOTIFICATION_ID, notification);
+                        mNotificationManager.notify(NOTIFICATION_ID, createNotification());
                     }
 
                     // Send a broadcast with the new title and artist
                     HashMap<String, String> messageData = new HashMap<>();
                     messageData.put(EXTRA_TITLE, title);
-                    messageData.put(EXTRA_ARTIST, title);
+                    messageData.put(EXTRA_ARTIST, artist);
                     sendMessage(INTENT_UPDATE_TITLE_ARTIST, messageData);
 
                     // Query for the new cover art

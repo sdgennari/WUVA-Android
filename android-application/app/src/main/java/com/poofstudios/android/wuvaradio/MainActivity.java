@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -26,6 +27,9 @@ public class MainActivity extends AppCompatActivity {
 
     Button stopButton;
     Button startButton;
+    TextView titleView;
+    TextView artistView;
+    TextView coverArtUrlView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +46,10 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+
+        titleView = (TextView) findViewById(R.id.title);
+        artistView = (TextView) findViewById(R.id.artist);
+        coverArtUrlView = (TextView) findViewById(R.id.cover_art_url);
 
         startButton = (Button) findViewById(R.id.start_button);
         startButton.setOnClickListener(new View.OnClickListener() {
@@ -64,19 +72,23 @@ public class MainActivity extends AppCompatActivity {
             public void onReceive(Context context, Intent intent) {
                 if (intent.getAction().equals(RadioPlayerService.INTENT_UPDATE_COVER_ART)) {
                     String coverArtUrl = intent.getStringExtra(RadioPlayerService.EXTRA_COVER_ART_URL);
-                    // TODO Update ui
 
+                    // TODO Update actual ui
+                    coverArtUrlView.setText(coverArtUrl);
                 } else if (intent.getAction().equals(RadioPlayerService.INTENT_UPDATE_TITLE_ARTIST)) {
                     String title = intent.getStringExtra(RadioPlayerService.EXTRA_TITLE);
                     String artist = intent.getStringExtra(RadioPlayerService.EXTRA_ARTIST);
-                    // TODO Update ui
 
+                    // TODO Update actual ui
+                    titleView.setText(title);
+                    artistView.setText(artist);
+                    coverArtUrlView.setText("Pending...");
                 }
             }
         };
     }
     private void stopService() {
-        // Must both stop and unbind service to full stop it
+        // Must both stop and unbind service to fully stop it
         stopService(new Intent(this, RadioPlayerService.class));
         doUnbindService();
     }
@@ -158,6 +170,8 @@ public class MainActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName name, IBinder service) {
             boundRadioPlayerService = ((RadioPlayerService.LocalBinder) service).getService();
             isServiceBound = true;
+
+            updateUI();
         }
 
         @Override
@@ -165,4 +179,11 @@ public class MainActivity extends AppCompatActivity {
             isServiceBound = false;
         }
     };
+
+    private void updateUI() {
+        // TODO Update actual UI with the following values
+        titleView.setText(boundRadioPlayerService.getCurrentTitle());
+        artistView.setText(boundRadioPlayerService.getCurrentArtist());
+        coverArtUrlView.setText(boundRadioPlayerService.getCurrentCoverArtUrl());
+    }
 }
