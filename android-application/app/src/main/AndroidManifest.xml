@@ -23,6 +23,12 @@
             </intent-filter>
         </activity>
 
+        <receiver android:name=".RemoteControlReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
+
         <service
             android:name=".RadioPlayerService"
             android:enabled="true"

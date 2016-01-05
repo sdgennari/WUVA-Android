@@ -4,14 +4,20 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v4.app.NotificationCompat;
+import android.support.v7.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 
 import com.poofstudios.android.wuvaradio.api.MusicBrainzApi;
@@ -57,6 +63,12 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
     private AudioManager mAudioManager = null;
     private MusicBrainzService musicBrainzService = null;
     private LocalBroadcastManager localBroadcastManager = null;
+
+    // Media Sessions
+    private MediaSessionCompat mMediaSession = null;
+    private static final String MEDIA_SESSION_TAG = "WUVAMediaSession";
+    private static final long PLAYBACK_ACTIONS = PlaybackStateCompat.ACTION_PLAY |
+            PlaybackStateCompat.ACTION_STOP;
 
     private boolean isForeground = false;
     private static final boolean ALLOW_REBIND = true;
@@ -109,6 +121,18 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         musicBrainzService = MusicBrainzApi.getService();
         localBroadcastManager = LocalBroadcastManager.getInstance(this);
 
+        // Start new MediaSession
+        ComponentName mediaButtonReceiver = new ComponentName(this, RemoteControlReceiver.class);
+        MediaSessionCallback mediaSessionCallback = new MediaSessionCallback();
+        mMediaSession = new MediaSessionCompat(this,
+                MEDIA_SESSION_TAG,
+                mediaButtonReceiver,
+                null);
+        mMediaSession.setFlags(
+                MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |
+                MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
+        mMediaSession.setCallback(mediaSessionCallback);
+
         this.currentArtist = null;
         this.currentTitle = null;
         this.currentCoverArtUrl = null;
@@ -127,6 +151,7 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         }
         stopForeground(true);
         isForeground = false;
+        mMediaSession.release();
         super.onDestroy();
     }
 
@@ -137,12 +162,24 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
                 new Intent(getApplicationContext(), MainActivity.class),
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
+        Bitmap placeholderBmp = BitmapFactory.decodeResource(this.getResources(), R.drawable.cover_art_placeholder);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+        builder.setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle(currentTitle)
+                .setContentText(currentArtist)
+                .setLargeIcon(placeholderBmp)
+                .setStyle(new NotificationCompat.MediaStyle()
+                .setMediaSession(mMediaSession.getSessionToken()))
+                .build();
+        /*
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
                 .setTicker(ticker)
                 .setContentTitle(currentTitle)
                 .setContentText(currentArtist)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentIntent(pendingIntent);
+        */
 
         return builder.build();
     }
@@ -173,6 +210,12 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
             mPlayer.play();
         }
         mPlayer.setVolume(TritonPlayer.VOLUME_NORMAL);
+
+        // Set MediaSession to active
+        // Tells system to route controls to the app
+        if (!mMediaSession.isActive()) {
+            mMediaSession.setActive(true);
+        }
     }
 
     private void createPlayer() {
@@ -242,6 +285,37 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         // TODO Update notification with picture from coverArtUrl
     }
 
+    private void updateMediaSessionMetadata() {
+        MediaMetadataCompat.Builder metadataBuilder = new MediaMetadataCompat.Builder();
+        metadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, currentTitle);
+        metadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, currentArtist);
+        // TODO Handle album art
+        mMediaSession.setMetadata(metadataBuilder.build());
+    }
+
+    private void updatePlaybackState() {
+        PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder();
+        stateBuilder.setActions(PLAYBACK_ACTIONS);
+
+        int state = PlaybackStateCompat.STATE_ERROR;
+        switch (mPlayer.getState()) {
+            case TritonPlayer.STATE_PLAYING:
+                state = PlaybackStateCompat.STATE_PLAYING;
+                break;
+            case TritonPlayer.STATE_STOPPED:
+                state = PlaybackStateCompat.STATE_STOPPED;
+                break;
+        }
+        long position = PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN;
+        stateBuilder.setState(state, position, 1.0f);
+
+        mMediaSession.setPlaybackState(stateBuilder.build());
+    }
+
+    public MediaSessionCompat getMediaSession() {
+        return mMediaSession;
+    }
+
     /**
      * Sends a broadcast from the service to any local activities
      *
@@ -283,6 +357,7 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
                     messageData.put(EXTRA_TITLE, title);
                     messageData.put(EXTRA_ARTIST, artist);
                     sendMessage(INTENT_UPDATE_TITLE_ARTIST, messageData);
+                    updateMediaSessionMetadata();
 
                     // Query for the new cover art
                     getCoverArtUrl(title, artist);  // Callback will set currentCoverArtUrl
@@ -315,6 +390,7 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
                 duckPlayer();
                 break;
         }
+        updatePlaybackState();
     }
 
     public class LocalBinder extends Binder {
@@ -322,5 +398,22 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
             // Return this instance of the service to expose public methods
             return RadioPlayerService.this;
         }
+    }
+
+    private final class MediaSessionCallback extends MediaSessionCompat.Callback {
+        // Requests to begin playback
+        @Override
+        public void onPlay() {
+            Log.d("====", "MediaSessionCallback onPlay");
+            startPlayer();
+        }
+
+        // Requests to stop playback
+        @Override
+        public void onStop() {
+            Log.d("====", "MediaSessionCallback onStop");
+            stopPlayer();
+        }
+
     }
 }
