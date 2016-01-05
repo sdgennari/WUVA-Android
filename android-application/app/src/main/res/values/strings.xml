@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">WUVARadio</string>
     <string name="action_settings">Settings</string>
+
+    <!-- Player Controls -->
+    <string name="control_play">Play</string>
+    <string name="control_stop">Stop</string>
 </resources>

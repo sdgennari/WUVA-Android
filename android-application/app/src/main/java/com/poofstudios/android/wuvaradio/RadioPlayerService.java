@@ -45,9 +45,11 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
     public static final String EXTRA_TITLE = "EXTRA_TITLE";
     public static final String EXTRA_ARTIST = "EXTRA_ARTIST";
 
-    // Service fields
-    public static final String ACTION_PLAY = "ACTION_PLAY";
+    // Action fields
+    public static final String ACTION_PLAY = "com.poofstudios.android.wuvaradio.play";
+    public static final String ACTION_STOP = "com.poofstudios.android.wuvaradio.stop";
     public static final int NOTIFICATION_ID = 777;
+    public static final int REQUEST_CODE = 100;
 
     private static final String CUE_TITLE = "cue_title";
     private static final String TRACK_ARTIST_NAME = "track_artist_name";
@@ -72,6 +74,10 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
 
     private boolean isForeground = false;
     private static final boolean ALLOW_REBIND = true;
+
+    // Pending intents
+    private PendingIntent mStopIntent;
+    private PendingIntent mPlayIntent;
 
     private String currentArtist;
     private String currentTitle;
@@ -126,12 +132,20 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         MediaSessionCallback mediaSessionCallback = new MediaSessionCallback();
         mMediaSession = new MediaSessionCompat(this,
                 MEDIA_SESSION_TAG,
-                mediaButtonReceiver,
+                mediaButtonReceiver,        // Include mediaButtonReceiver to support per-L devices
                 null);
         mMediaSession.setFlags(
                 MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |
                 MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
         mMediaSession.setCallback(mediaSessionCallback);
+
+        // Setup pending intents
+        String pkg = this.getPackageName();
+        mPlayIntent = PendingIntent.getBroadcast(this, REQUEST_CODE,
+                new Intent(ACTION_PLAY).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+        mStopIntent = PendingIntent.getBroadcast(this, REQUEST_CODE,
+                new Intent(ACTION_STOP).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+
 
         this.currentArtist = null;
         this.currentTitle = null;
@@ -156,6 +170,7 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
     }
 
     private Notification createNotification() {
+        updatePlaybackState();
         String ticker = String.format("%s by %s", currentTitle, currentArtist);
 
         final PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0,
@@ -168,18 +183,21 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         builder.setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(currentTitle)
                 .setContentText(currentArtist)
+                .setTicker(ticker)
                 .setLargeIcon(placeholderBmp)
                 .setStyle(new NotificationCompat.MediaStyle()
                 .setMediaSession(mMediaSession.getSessionToken()))
-                .build();
-        /*
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
-                .setTicker(ticker)
-                .setContentTitle(currentTitle)
-                .setContentText(currentArtist)
-                .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentIntent(pendingIntent);
-        */
+
+        if (mPlayer.getState() == TritonPlayer.STATE_PLAYING || mPlayer.getState() == TritonPlayer.STATE_CONNECTING) {
+            Log.d("====", "Adding Stop Button");
+            builder.addAction(R.drawable.ic_stop, this.getString(R.string.control_stop), mStopIntent);
+        }
+
+        if (mPlayer.getState() == TritonPlayer.STATE_STOPPED) {
+            Log.d("====", "Adding Play Button");
+            builder.addAction(R.drawable.ic_play_arrow, this.getString(R.string.control_play), mPlayIntent);
+        }
 
         return builder.build();
     }
