@@ -3,6 +3,7 @@ package com.poofstudios.android.wuvaradio.api;
 import retrofit.GsonConverterFactory;
 import retrofit.Retrofit;
 
+// Singleton class that creates MusicBrainzService object
 public class MusicBrainzApi {
 
     static MusicBrainzService musicBrainzService;

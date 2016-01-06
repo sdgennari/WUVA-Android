@@ -30,50 +30,67 @@ import retrofit.Response;
 import retrofit.Retrofit;
 
 public class RadioPlayerService extends Service implements MediaPlayer.OnCuePointReceivedListener,
-        AudioManager.OnAudioFocusChangeListener {
+    AudioManager.OnAudioFocusChangeListener {
 
-    // LocalBroadcastManager fields
+    // LocalBroadcastManager fields, passed between service and activity
     public static final String INTENT_UPDATE_COVER_ART = "INTENT_UPDATE_COVER_ART";
     public static final String INTENT_UPDATE_TITLE_ARTIST = "INTENT_UPDATE_TITLE_ARTIST";
     public static final String EXTRA_COVER_ART_URL = "EXTRA_COVER_ART_URL";
     public static final String EXTRA_TITLE = "EXTRA_TITLE";
     public static final String EXTRA_ARTIST = "EXTRA_ARTIST";
 
-    // Service fields
+    // Notification fields, passed between notification and service
     public static final String ACTION_PLAY = "ACTION_PLAY";
     public static final int NOTIFICATION_ID = 777;
 
+    // Meta data from Triton
     private static final String CUE_TITLE = "cue_title";
     private static final String TRACK_ARTIST_NAME = "track_artist_name";
 
+    // Fields given to Triton to establish radio connection
     // TODO Get actual Broadcaster and Name from WUVA
     private static final String STATION_BROADCASTER = "WUVA";
     private static final String STATION_NAME = "WUVA";
     private static final String STATION_MOUNT = "WUVA";
 
+    // Binds activity to service
     private final IBinder mBinder = new LocalBinder();
+
+    // Establishes radio connection
     private TritonPlayer mPlayer = null;
-    private NotificationManager mNotificationManager = null;
-    private AudioManager mAudioManager = null;
-    private MusicBrainzService musicBrainzService = null;
-    private LocalBroadcastManager localBroadcastManager = null;
 
-    private boolean isForeground = false;
-    private static final boolean ALLOW_REBIND = true;
-
+    // Current song data
     private String currentArtist;
     private String currentTitle;
     private String currentCoverArtUrl;
 
-    public RadioPlayerService() {
-    }
+    // For getting album cover art
+    private MusicBrainzService musicBrainzService = null;
+    private LocalBroadcastManager localBroadcastManager = null;
 
+    // Manages notifications
+    private NotificationManager mNotificationManager = null;
+
+    // Handles audio focus (phone, GPS, etc.)
+    private AudioManager mAudioManager = null;
+
+    private boolean isForeground = false;
+    private static final boolean ALLOW_REBIND = true;
+
+    /**
+     * Called when service starts
+     * @param intent Intent passed to service via startService() method (may be null)
+     * @param flags Additional data about start request
+     * @param startId Unique ID representing specific start request
+     */
+    @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = null;
         if (intent != null) {
             action = intent.getAction();
         }
 
+        // Play radio if play action given
         if (ACTION_PLAY.equals(action)) {
             // Requesting audio focus will handle creating the player and playing the stream
             int result = mAudioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
@@ -86,6 +103,9 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         return START_NOT_STICKY;
     }
 
+    /*
+     * Callback methods for binding lifecycle
+     */
     @Override
     public IBinder onBind(Intent intent) {
         return mBinder;
@@ -101,6 +121,9 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         return ALLOW_REBIND;
     }
 
+    /**
+     * Initializes managers, MusicBrainz service
+     */
     @Override
     public void onCreate() {
         super.onCreate();
@@ -114,6 +137,9 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         this.currentCoverArtUrl = null;
     }
 
+    /**
+     * Stops player, releases media player instance
+     */
     @Override
     public void onDestroy() {
         if (mAudioManager != null) {
@@ -130,6 +156,9 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         super.onDestroy();
     }
 
+    /**
+     * Builds notification
+     */
     private Notification createNotification() {
         String ticker = String.format("%s by %s", currentTitle, currentArtist);
 
@@ -147,6 +176,9 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         return builder.build();
     }
 
+    /*
+     * Player actions
+     */
     private void stopPlayer() {
         if (mPlayer != null && mPlayer.getState() == TritonPlayer.STATE_PLAYING) {
             mPlayer.stop();
@@ -160,6 +192,7 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         }
     }
 
+    // Makes player quiet (for phone, GPS, etc.)
     private void duckPlayer() {
         if (mPlayer != null && mPlayer.getState() == TritonPlayer.STATE_PLAYING) {
             mPlayer.setVolume(TritonPlayer.VOLUME_DUCK);
@@ -175,6 +208,9 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         mPlayer.setVolume(TritonPlayer.VOLUME_NORMAL);
     }
 
+    /**
+     * Builds music player
+     */
     private void createPlayer() {
         // Configure player settings
         Bundle settings = new Bundle();
@@ -191,6 +227,9 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         mPlayer.play();
     }
 
+    /*
+     * Getter methods
+     */
     public String getCurrentArtist() {
         return this.currentArtist;
     }
@@ -203,9 +242,19 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         return this.currentCoverArtUrl;
     }
 
+    /**
+     * Searches MusicBrainz database for 'release id' associated with song, then broadcasts cover art URL
+     * @param title Title of song
+     * @param artist Artist of song
+     */
     private void getCoverArtUrl(String title, String artist) {
+        // Formats query
         String query = UrlUtils.formatMusicBrainzQuery(title, artist);
+
+        // Create callback object
         Call<RecordingResponse> recordingResponseCall = musicBrainzService.getMBID(query);
+
+        // Enqueue query, handle response
         recordingResponseCall.enqueue(new Callback<RecordingResponse>() {
             @Override
             public void onResponse(Response<RecordingResponse> response, Retrofit retrofit) {
@@ -238,10 +287,6 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         });
     }
 
-    private void updateNotificationImage(String coverArtUrl) {
-        // TODO Update notification with picture from coverArtUrl
-    }
-
     /**
      * Sends a broadcast from the service to any local activities
      *
@@ -257,6 +302,12 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         localBroadcastManager.sendBroadcast(broadcastIntent);
     }
 
+    /**
+     * Player detects cue point (meta data in stream) containing title/artist of song.
+     * Method refreshes fields with this data and broadcasts it.
+     * @param mediaPlayer Source of event
+     * @param cuePoint Bundle containing title/artist data
+     */
     @Override
     public void onCuePointReceived(MediaPlayer mediaPlayer, Bundle cuePoint) {
         if (mPlayer == mediaPlayer) {
@@ -291,6 +342,10 @@ public class RadioPlayerService extends Service implements MediaPlayer.OnCuePoin
         }
     }
 
+    /**
+     * Callback to adjust sound according to audio focus
+     * @param focusChange Integer associated with an action from AudioManager
+     */
     @Override
     public void onAudioFocusChange(int focusChange) {
         switch(focusChange) {

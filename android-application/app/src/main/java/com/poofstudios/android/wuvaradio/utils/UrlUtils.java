@@ -17,6 +17,7 @@ public class UrlUtils {
                 COVER_ART_FORMAT);
     }
 
+    // Given title and artist, returns 'title AND artist: "B"'
     public static String formatMusicBrainzQuery(String title, String artist) {
         try {
             String formattedTitle = formatTitle(title.toLowerCase());
