@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void startService() {
         Intent intent = new Intent(this, RadioPlayerService.class);
-        intent.setAction(RadioPlayerService.ACTION_PLAY);
+        intent.setAction(RadioPlayerService.CMD_PLAY);
         startService(intent);
     }
 

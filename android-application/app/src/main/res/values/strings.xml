@@ -2,7 +2,8 @@
     <string name="app_name">WUVARadio</string>
     <string name="action_settings">Settings</string>
 
-    <!-- Player Controls -->
-    <string name="control_play">Play</string>
-    <string name="control_stop">Stop</string>
+    <!-- Actions -->
+    <string name="action_play">Play</string>
+    <string name="action_stop">Stop</string>
+    <string name="action_favorite">Favorite</string>
 </resources>
