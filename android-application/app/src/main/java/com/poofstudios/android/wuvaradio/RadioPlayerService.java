@@ -190,6 +190,10 @@ public class RadioPlayerService extends Service implements
         });
     }
 
+    /**
+     * Adds the coverArtUrl to the current session metadata
+     * @param coverArtUrl url for the cover art image
+     */
     private void addCoverArtUrlToMetadata(String coverArtUrl) {
         Log.d("====", "addCoverArtUrlToMetadata");
         MediaDescriptionCompat oldDescription = mMediaSession.getController().getMetadata()
@@ -209,6 +213,10 @@ public class RadioPlayerService extends Service implements
         mMediaSession.setMetadata(metadataBuilder.build());
     }
 
+    /**
+     * Updates the session metadata and queries for the cover art url
+     * @param metadata new metadata for the session
+     */
     private void updateMediaSessionMetadata(MediaMetadataCompat metadata) {
         Log.d("====", "updateMediaSessionMetadata");
         // Update the metadata for the session
@@ -226,6 +234,9 @@ public class RadioPlayerService extends Service implements
         }
     }
 
+    /**
+     * Updates the session playback state and creates a notification if necessary
+     */
     private void updatePlaybackState() {
         Log.d("====", "updatePlaybackState " + mPlayback.getState());
         PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder();
@@ -307,11 +318,17 @@ public class RadioPlayerService extends Service implements
      */
     private final class MediaSessionCallback extends MediaSessionCompat.Callback {
 
+        /**
+         * Starts playback
+         */
         @Override
         public void onPlay() {
             mPlayback.play();
         }
 
+        /**
+         * Stops playback and stops the service
+         */
         @Override
         public void onStop() {
             Log.d("====", "MediaSessionCallback onStop");

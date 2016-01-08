@@ -131,6 +131,10 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * Connects to the current MediaSession to receive callbacks
+     * @param token token from the current MediaSession
+     */
     private void connectToSession(MediaSessionCompat.Token token) {
         Log.d("====", "connectToSession");
         try {
@@ -153,6 +157,10 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Updates UI based on the playback state
+     * @param playbackState current playback state
+     */
     private void updatePlaybackState(PlaybackStateCompat playbackState) {
         if (playbackState == null) {
             return;
@@ -176,6 +184,10 @@ public class MainActivity extends AppCompatActivity {
         // playbackState.getCustomActions()
     }
 
+    /**
+     * Updates the UI with the new media description
+     * @param description new MediaDescription from the session metadata
+     */
     private void updateMediaDescription(MediaDescriptionCompat description) {
         Log.d("====", "updateMediaDescription");
         if (description == null) {
@@ -213,6 +225,9 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    /**
+     * Callback for MediaController to update the notification when the session changes
+     */
     private final MediaControllerCompat.Callback mControllerCallback = new MediaControllerCompat.Callback() {
 
         @Override

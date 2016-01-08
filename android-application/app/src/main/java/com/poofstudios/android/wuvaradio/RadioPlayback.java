@@ -110,7 +110,7 @@ public class RadioPlayback implements MediaPlayer.OnCuePointReceivedListener,
 
     /**
      * Player detects cue point (meta data in stream) containing title/artist of song.
-     * Method refreshes fields with this data and broadcasts it.
+     * Method refreshes fields with this data and notifies the callback
      * @param mediaPlayer Source of event
      * @param cuePoint Bundle containing title/artist data
      */
@@ -135,12 +135,20 @@ public class RadioPlayback implements MediaPlayer.OnCuePointReceivedListener,
                     // Instead, it must be fetched from the MusicBrainzApi (done in the service)
 
                     // Notify the callback that the metadata has changed
-                    mCallback.onMetadataChanged(metadataBuilder.build());
+                    if (mCallback != null) {
+                        mCallback.onMetadataChanged(metadataBuilder.build());
+                    }
                 }
             }
         }
     }
 
+    /**
+     * Callback when TritonPlay changes state. Converts the TritonPlayer state to mState and
+     * notifies the callback
+     * @param mediaPlayer Source of event
+     * @param state New state of the player
+     */
     @Override
     public void onStateChanged(MediaPlayer mediaPlayer, int state) {
         if (mPlayer == mediaPlayer) {
@@ -160,18 +168,32 @@ public class RadioPlayback implements MediaPlayer.OnCuePointReceivedListener,
                     mState = PlaybackStateCompat.STATE_NONE;
             }
             // Notify the callback that the state has changed
-            mCallback.onPlaybackStateChanged();
+            if (mCallback != null) {
+                mCallback.onPlaybackStateChanged();
+            }
         }
     }
 
+    /**
+     * Sets the state of the playback
+     * @param state state of the playback (a state in PlaybackStateCompat.STATE_*)
+     */
     public void setState(int state) {
         this.mState = state;
     }
 
+    /**
+     * Gets the state of the playback
+     * @return state of the playback (a state in PlaybackStateCompat.STATE_*)
+     */
     public int getState() {
         return mState;
     }
 
+    /**
+     * Sets the callback to receive events from the RadioPlayback
+     * @param callback callback to receive events
+     */
     public void setCallback(Callback callback) {
         this.mCallback = callback;
     }

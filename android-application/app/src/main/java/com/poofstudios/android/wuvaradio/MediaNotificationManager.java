@@ -45,6 +45,10 @@ public class MediaNotificationManager extends BroadcastReceiver {
 
     private boolean mStarted = false;
 
+    /**
+     * Creates a new MediaNotificationManager and configures the pending intents and session token
+     * @param service
+     */
     public MediaNotificationManager(RadioPlayerService service) {
         mService = service;
         updateSessionToken();
@@ -65,6 +69,10 @@ public class MediaNotificationManager extends BroadcastReceiver {
         mNotificationManager.cancelAll();
     }
 
+    /**
+     * Starts displaying the notification if it can create a valid notification (see
+     * {@link #createNotification()}). Puts service in foreground as well to continue playback
+     */
     public void startNotification() {
         if (!mStarted) {
             mMediaMetadata = mMediaController.getMetadata();
@@ -86,6 +94,9 @@ public class MediaNotificationManager extends BroadcastReceiver {
         }
     }
 
+    /**
+     * Stops the notification and removes the service from the foreground
+     */
     public void stopNotification() {
         if (mStarted) {
             mStarted = false;
@@ -100,6 +111,9 @@ public class MediaNotificationManager extends BroadcastReceiver {
         }
     }
 
+    /**
+     * Updates the session token and creates a new MediaController
+     */
     private void updateSessionToken() {
         MediaSessionCompat.Token freshToken = mService.getSessionToken();
         if (mSessionToken == null || !mSessionToken.equals(freshToken)) {
@@ -119,6 +133,10 @@ public class MediaNotificationManager extends BroadcastReceiver {
         }
     }
 
+    /**
+     * Creates a Notification with actions and metadata from the current session
+     * @return new notification with playback controls
+     */
     private Notification createNotification() {
         if (mMediaMetadata == null || mPlaybackState == null) {
             return null;
@@ -152,6 +170,12 @@ public class MediaNotificationManager extends BroadcastReceiver {
         return builder.build();
     }
 
+    /**
+     * Creates a content intent for when the notification is clicked. The intent should load the
+     * UI to control the playback
+     * @param description description of the current session metadata
+     * @return PendingIntent to launch the playback UI
+     */
     private PendingIntent createContentIntent(MediaDescriptionCompat description) {
         Intent openUI = new Intent(mService, MainActivity.class);
         openUI.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -163,9 +187,13 @@ public class MediaNotificationManager extends BroadcastReceiver {
         return PendingIntent.getActivity(mService, REQUEST_CODE, openUI, PendingIntent.FLAG_CANCEL_CURRENT);
     }
 
+    /**
+     * Sets the notification to ongoing if playback is running
+     * @param builder builder for the notification
+     */
     private void setNotificationPlaybackState(NotificationCompat.Builder builder) {
         if (mPlaybackState == null || !mStarted) {
-            // Playback is not going, so remove the notifcation
+            // Playback is not going, so remove the notification
             mService.stopForeground(true);
         } else {
             // Prevent notification from being dismissed if playback is active
@@ -173,6 +201,10 @@ public class MediaNotificationManager extends BroadcastReceiver {
         }
     }
 
+    /**
+     * Adds either a play or a stop button depending on playback state
+     * @param builder builder for the notification
+     */
     private void addPlayStopButton(NotificationCompat.Builder builder) {
         String label;
         int icon;
@@ -189,6 +221,7 @@ public class MediaNotificationManager extends BroadcastReceiver {
         builder.addAction(icon, label, pendingIntent);
     }
 
+    // Extend BroadcastReceiver to handle notification actions
     @Override
     public void onReceive(Context context, Intent intent) {
         final String action = intent.getAction();
@@ -204,6 +237,9 @@ public class MediaNotificationManager extends BroadcastReceiver {
         }
     }
 
+    /**
+     * Callback for MediaController to update the notification when the session changes
+     */
     private final MediaControllerCompat.Callback mControllerCallback = new MediaControllerCompat.Callback() {
 
         @Override
