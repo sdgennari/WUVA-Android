@@ -1,18 +1,22 @@
 package com.poofstudios.android.wuvaradio;
 
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.RemoteException;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.media.MediaDescriptionCompat;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -21,15 +25,14 @@ import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
-    private BroadcastReceiver broadcastReceiver;
-    private RadioPlayerService boundRadioPlayerService;
-    private boolean isServiceBound = false;
+    private RadioPlayerService mService;
+    private boolean mServiceBound = false;
 
-    Button stopButton;
-    Button startButton;
-    TextView titleView;
-    TextView artistView;
-    TextView coverArtUrlView;
+    Button mStopButton;
+    Button mStartButton;
+    TextView mTitleView;
+    TextView mArtistView;
+    TextView mCoverArtUrlView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,50 +50,27 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        titleView = (TextView) findViewById(R.id.title);
-        artistView = (TextView) findViewById(R.id.artist);
-        coverArtUrlView = (TextView) findViewById(R.id.cover_art_url);
+        mTitleView = (TextView) findViewById(R.id.title);
+        mArtistView = (TextView) findViewById(R.id.artist);
+        mCoverArtUrlView = (TextView) findViewById(R.id.cover_art_url);
 
-        startButton = (Button) findViewById(R.id.start_button);
-        startButton.setOnClickListener(new View.OnClickListener() {
+        mStartButton = (Button) findViewById(R.id.start_button);
+        mStartButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startService();
             }
         });
 
-        stopButton = (Button) findViewById(R.id.stop_button);
-        stopButton.setOnClickListener(new View.OnClickListener() {
+        mStopButton = (Button) findViewById(R.id.stop_button);
+        mStopButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                stopService();
+                MediaControllerCompat.TransportControls controls =
+                        getSupportMediaController().getTransportControls();
+                controls.stop();
             }
         });
-
-        broadcastReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                if (intent.getAction().equals(RadioPlayerService.INTENT_UPDATE_COVER_ART)) {
-                    String coverArtUrl = intent.getStringExtra(RadioPlayerService.EXTRA_COVER_ART_URL);
-
-                    // TODO Update actual ui
-                    coverArtUrlView.setText(coverArtUrl);
-                } else if (intent.getAction().equals(RadioPlayerService.INTENT_UPDATE_TITLE_ARTIST)) {
-                    String title = intent.getStringExtra(RadioPlayerService.EXTRA_TITLE);
-                    String artist = intent.getStringExtra(RadioPlayerService.EXTRA_ARTIST);
-
-                    // TODO Update actual ui
-                    titleView.setText(title);
-                    artistView.setText(artist);
-                    coverArtUrlView.setText("Pending...");
-                }
-            }
-        };
-    }
-    private void stopService() {
-        // Must both stop and unbind service to fully stop it
-        stopService(new Intent(this, RadioPlayerService.class));
-        doUnbindService();
     }
 
     private void startService() {
@@ -106,32 +86,22 @@ public class MainActivity extends AppCompatActivity {
         // Bind to the service
         Intent bindIntent = new Intent(this, RadioPlayerService.class);
         bindService(bindIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
-
-        // Register the broadcastReceiver
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(RadioPlayerService.INTENT_UPDATE_COVER_ART);
-        intentFilter.addAction(RadioPlayerService.INTENT_UPDATE_TITLE_ARTIST);
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         doUnbindService();
-    }
-
-    private void doUnbindService() {
-        if (isServiceBound) {
-            unbindService(mServiceConnection);
-            isServiceBound = false;
+        if (getSupportMediaController() != null) {
+            getSupportMediaController().unregisterCallback(mControllerCallback);
         }
     }
 
-    @Override
-    protected void onPause() {
-        // Unregister the broadcastReceiver
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
-        super.onPause();
+    private void doUnbindService() {
+        if (mServiceBound) {
+            unbindService(mServiceConnection);
+            mServiceBound = false;
+        }
     }
 
     @Override
@@ -161,6 +131,62 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    private void connectToSession(MediaSessionCompat.Token token) {
+        Log.d("====", "connectToSession");
+        try {
+            MediaControllerCompat mediaController = new MediaControllerCompat(MainActivity.this, token);
+            setSupportMediaController(mediaController);
+            mediaController.registerCallback(mControllerCallback);
+
+            // Update the playback state
+            PlaybackStateCompat playbackState = mediaController.getPlaybackState();
+            updatePlaybackState(playbackState);
+
+            // Update the metadata description
+            MediaMetadataCompat metadata = mediaController.getMetadata();
+            if (metadata != null) {
+                updateMediaDescription(metadata.getDescription());
+            }
+        } catch (RemoteException e) {
+            Log.e("WUVA", e.getLocalizedMessage());
+        }
+
+    }
+
+    private void updatePlaybackState(PlaybackStateCompat playbackState) {
+        if (playbackState == null) {
+            return;
+        }
+
+        // Update the UI based on the current playback state
+        switch(playbackState.getState()) {
+            case PlaybackStateCompat.STATE_CONNECTING:
+            case PlaybackStateCompat.STATE_PLAYING:
+                mStartButton.setVisibility(View.GONE);
+                mStopButton.setVisibility(View.VISIBLE);
+                break;
+            case PlaybackStateCompat.STATE_STOPPED:
+                mStartButton.setVisibility(View.VISIBLE);
+                mStopButton.setVisibility(View.GONE);
+                break;
+            default:
+                Log.d("WUVA", "Unhandled state " + playbackState.getState());
+        }
+        // Can handle other button visibility with playbackState.getActions() or
+        // playbackState.getCustomActions()
+    }
+
+    private void updateMediaDescription(MediaDescriptionCompat description) {
+        Log.d("====", "updateMediaDescription");
+        if (description == null) {
+            return;
+        }
+        // Update the views
+        mTitleView.setText(description.getTitle());
+        mArtistView.setText(description.getSubtitle());
+        mCoverArtUrlView.setText("Pending...");
+    }
+
     /**
      * Defines callbacks for service binding
      * Passed as a param to bindService()
@@ -168,22 +194,31 @@ public class MainActivity extends AppCompatActivity {
     private ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            boundRadioPlayerService = ((RadioPlayerService.LocalBinder) service).getService();
-            isServiceBound = true;
+            Log.d("====", "onServiceConnected");
+            mService = ((RadioPlayerService.LocalBinder) service).getService();
+            mServiceBound = true;
 
-            updateUI();
+            connectToSession(mService.getSessionToken());
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            isServiceBound = false;
+            mServiceBound = false;
         }
     };
 
-    private void updateUI() {
-        // TODO Update actual UI with the following values
-        titleView.setText(boundRadioPlayerService.getCurrentTitle());
-        artistView.setText(boundRadioPlayerService.getCurrentArtist());
-        coverArtUrlView.setText(boundRadioPlayerService.getCurrentCoverArtUrl());
-    }
+    private final MediaControllerCompat.Callback mControllerCallback = new MediaControllerCompat.Callback() {
+
+        @Override
+        public void onPlaybackStateChanged(PlaybackStateCompat state) {
+            updatePlaybackState(state);
+        }
+
+        @Override
+        public void onMetadataChanged(MediaMetadataCompat metadata) {
+            if (metadata != null) {
+                updateMediaDescription(metadata.getDescription());
+            }
+        }
+    };
 }

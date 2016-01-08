@@ -8,7 +8,6 @@ import android.media.AudioManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
@@ -19,8 +18,6 @@ import com.poofstudios.android.wuvaradio.api.MusicBrainzService;
 import com.poofstudios.android.wuvaradio.api.model.RecordingResponse;
 import com.poofstudios.android.wuvaradio.utils.UrlUtils;
 
-import java.util.HashMap;
-
 import retrofit.Call;
 import retrofit.Callback;
 import retrofit.Response;
@@ -30,19 +27,11 @@ public class RadioPlayerService extends Service implements
         AudioManager.OnAudioFocusChangeListener,
         RadioPlayback.Callback {
 
-    // LocalBroadcastManager fields
-    public static final String INTENT_UPDATE_COVER_ART = "INTENT_UPDATE_COVER_ART";
-    public static final String INTENT_UPDATE_TITLE_ARTIST = "INTENT_UPDATE_TITLE_ARTIST";
-    public static final String EXTRA_COVER_ART_URL = "EXTRA_COVER_ART_URL";
-    public static final String EXTRA_TITLE = "EXTRA_TITLE";
-    public static final String EXTRA_ARTIST = "EXTRA_ARTIST";
-
     public static final String CMD_PLAY = "CMD_PLAY";
 
     private final IBinder mBinder = new LocalBinder();
     private AudioManager mAudioManager = null;
     private MusicBrainzService musicBrainzService = null;
-    private LocalBroadcastManager localBroadcastManager = null;
     private MediaNotificationManager mMediaNotificationManager;
 
     private RadioPlayback mPlayback;
@@ -55,21 +44,17 @@ public class RadioPlayerService extends Service implements
 
     private static final boolean ALLOW_REBIND = true;
 
-    private String currentArtist;
-    private String currentTitle;
-    private String currentCoverArtUrl;
-
     @Override
     public void onCreate() {
         super.onCreate();
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         musicBrainzService = MusicBrainzApi.getService();
-        localBroadcastManager = LocalBroadcastManager.getInstance(this);
 
         mPlayback = new RadioPlayback(this);
         mPlayback.setCallback(this);
 
         // Start new MediaSession
+        // Create an instance of the MediaButtonReceiver class
         ComponentName mediaButtonReceiver = new ComponentName(this, RemoteControlReceiver.class);
         MediaSessionCallback mediaSessionCallback = new MediaSessionCallback();
         mMediaSession = new MediaSessionCompat(this,
@@ -82,10 +67,6 @@ public class RadioPlayerService extends Service implements
         mMediaSession.setCallback(mediaSessionCallback);
 
         mMediaNotificationManager = new MediaNotificationManager(this);
-
-        this.currentArtist = null;
-        this.currentTitle = null;
-        this.currentCoverArtUrl = null;
     }
 
     @Override
@@ -143,18 +124,6 @@ public class RadioPlayerService extends Service implements
         return mMediaSession.getSessionToken();
     }
 
-    public String getCurrentArtist() {
-        return this.currentArtist;
-    }
-
-    public String getCurrentTitle() {
-        return this.currentTitle;
-    }
-
-    public String getCurrentCoverArtUrl() {
-        return this.currentCoverArtUrl;
-    }
-
     private void getCoverArtUrl(String title, String artist) {
         String query = UrlUtils.formatMusicBrainzQuery(title, artist);
         Call<RecordingResponse> recordingResponseCall = musicBrainzService.getMBID(query);
@@ -172,12 +141,7 @@ public class RadioPlayerService extends Service implements
                         // At least one release
                         if (recording.releases.size() != 0) {
                             RecordingResponse.Release release = recording.releases.get(0);
-                            currentCoverArtUrl = UrlUtils.formatCoverArtUrl(release.id);
-
-                            // Send a broadcast with url for cover art image
-                            HashMap<String, String> messageData = new HashMap<>();
-                            messageData.put(EXTRA_COVER_ART_URL, currentCoverArtUrl);
-                            sendMessage(INTENT_UPDATE_COVER_ART, messageData);
+                            //currentCoverArtUrl = UrlUtils.formatCoverArtUrl(release.id);
                         }
                     }
                 }
@@ -191,6 +155,7 @@ public class RadioPlayerService extends Service implements
     }
 
     private void updateMediaSessionMetadata(MediaMetadataCompat metadata) {
+        Log.d("====", "updateMediaSessionMetadata");
         // Update the metadata for the session
         mMediaSession.setMetadata(metadata);
 
@@ -200,6 +165,7 @@ public class RadioPlayerService extends Service implements
     }
 
     private void updatePlaybackState() {
+        Log.d("====", "updatePlaybackState " + mPlayback.getState());
         PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder();
         stateBuilder.setActions(PLAYBACK_ACTIONS);
 
@@ -212,21 +178,6 @@ public class RadioPlayerService extends Service implements
         if (state == PlaybackStateCompat.STATE_PLAYING) {
             mMediaNotificationManager.startNotification();
         }
-    }
-
-    /**
-     * Sends a broadcast from the service to any local activities
-     *
-     * @param eventName Name of the event being broadcast
-     * @param data Extras to be put in the intent
-     */
-    private void sendMessage(String eventName, HashMap<String, String> data) {
-        Intent broadcastIntent = new Intent(eventName);
-        for (String key : data.keySet()) {
-            String value = data.get(key);
-            broadcastIntent.putExtra(key, value);
-        }
-        localBroadcastManager.sendBroadcast(broadcastIntent);
     }
 
     @Override
@@ -281,6 +232,7 @@ public class RadioPlayerService extends Service implements
      */
     @Override
     public void onMetadataChanged(MediaMetadataCompat metadata) {
+        Log.d("====", "onMetadataChanged");
         updateMediaSessionMetadata(metadata);
     }
 
@@ -296,7 +248,12 @@ public class RadioPlayerService extends Service implements
 
         @Override
         public void onStop() {
+            Log.d("====", "MediaSessionCallback onStop");
             mPlayback.stop();
+            mPlayback.release();
+
+            // Playback ended, so stop the service
+            RadioPlayerService.this.stopSelf();
         }
 
     }
