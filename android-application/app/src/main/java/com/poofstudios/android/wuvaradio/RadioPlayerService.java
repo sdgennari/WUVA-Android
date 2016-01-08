@@ -8,6 +8,7 @@ import android.media.AudioManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
@@ -125,6 +126,7 @@ public class RadioPlayerService extends Service implements
     }
 
     private void getCoverArtUrl(String title, String artist) {
+        Log.d("====", "getCoverArtUrl");
         String query = UrlUtils.formatMusicBrainzQuery(title, artist);
         Call<RecordingResponse> recordingResponseCall = musicBrainzService.getMBID(query);
         recordingResponseCall.enqueue(new Callback<RecordingResponse>() {
@@ -141,7 +143,7 @@ public class RadioPlayerService extends Service implements
                         // At least one release
                         if (recording.releases.size() != 0) {
                             RecordingResponse.Release release = recording.releases.get(0);
-                            //currentCoverArtUrl = UrlUtils.formatCoverArtUrl(release.id);
+                            addCoverArtUrlToMetadata(UrlUtils.formatCoverArtUrl(release.id));
                         }
                     }
                 }
@@ -154,14 +156,40 @@ public class RadioPlayerService extends Service implements
         });
     }
 
+    private void addCoverArtUrlToMetadata(String coverArtUrl) {
+        Log.d("====", "addCoverArtUrlToMetadata");
+        MediaDescriptionCompat oldDescription = mMediaSession.getController().getMetadata()
+                .getDescription();
+
+        // Transfer the old metadata to a new metadata object
+        MediaMetadataCompat.Builder metadataBuilder = new MediaMetadataCompat.Builder();
+        metadataBuilder.putText(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE,
+                oldDescription.getTitle());
+        metadataBuilder.putText(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE,
+                oldDescription.getSubtitle());
+
+        // Add the new coverArtUrl to the metadata
+        metadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, coverArtUrl);
+
+        // Update the metadata for the session
+        mMediaSession.setMetadata(metadataBuilder.build());
+    }
+
     private void updateMediaSessionMetadata(MediaMetadataCompat metadata) {
         Log.d("====", "updateMediaSessionMetadata");
         // Update the metadata for the session
         mMediaSession.setMetadata(metadata);
 
-        // TODO Fetch cover art url
-//        // Query for the new cover art
-//        getCoverArtUrl(title, artist);  // Callback will set currentCoverArtUrl
+        // Query for the new cover art
+        MediaDescriptionCompat description = metadata.getDescription();
+        if (description != null) {
+            // Get the values from the metadata
+            String title = String.valueOf(description.getTitle());
+            String artist = String.valueOf(description.getSubtitle());
+
+            // Make an async query to get the cover art url
+            getCoverArtUrl(title, artist);
+        }
     }
 
     private void updatePlaybackState() {

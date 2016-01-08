@@ -184,7 +184,13 @@ public class MainActivity extends AppCompatActivity {
         // Update the views
         mTitleView.setText(description.getTitle());
         mArtistView.setText(description.getSubtitle());
-        mCoverArtUrlView.setText("Pending...");
+
+        if (description.getIconUri() != null) {
+            mCoverArtUrlView.setText(description.getIconUri().toString());
+        } else {
+            // Request is still pending, so no MediaUri set
+            mCoverArtUrlView.setText("Pending...");
+        }
     }
 
     /**

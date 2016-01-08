@@ -35,6 +35,10 @@ public class RadioPlayback implements MediaPlayer.OnCuePointReceivedListener,
 
     private RadioPlayerService mService;
 
+    // Last title and artist received in metadata
+    private String mLastTitle;
+    private String mLastArtist;
+
     public RadioPlayback(RadioPlayerService service) {
         this.mService = service;
     }
@@ -110,7 +114,14 @@ public class RadioPlayback implements MediaPlayer.OnCuePointReceivedListener,
             if (cuePoint != null) {
                 String title = StringUtils.capitalizeEveryWord(cuePoint.getString(CUE_TITLE));
                 String artist = StringUtils.capitalizeEveryWord(cuePoint.getString(TRACK_ARTIST_NAME));
-                if (title != null && artist != null) {
+
+                // Check for valid and non-repeated metadata
+                if (title != null && artist != null && !title.equals(mLastTitle) && !artist.equals(mLastArtist)) {
+                    // Update last title and artist
+                    mLastTitle = title;
+                    mLastArtist = artist;
+
+                    // Create a MediaMetadata with the new values
                     MediaMetadataCompat.Builder metadataBuilder = new MediaMetadataCompat.Builder();
                     metadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, title);
                     metadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, artist);
