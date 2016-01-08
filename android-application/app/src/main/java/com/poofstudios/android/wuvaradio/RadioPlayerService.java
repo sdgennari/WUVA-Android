@@ -30,11 +30,19 @@ public class RadioPlayerService extends Service implements
 
     public static final String CMD_PLAY = "CMD_PLAY";
 
+    // Binds activity to service
     private final IBinder mBinder = new LocalBinder();
-    private AudioManager mAudioManager = null;
-    private MusicBrainzService musicBrainzService = null;
+
+    // Handles audio focus (phone, GPS, etc.)
+    private AudioManager mAudioManager;
+
+    // For getting album cover art
+    private MusicBrainzService musicBrainzService;
+
+    // Manages notifications
     private MediaNotificationManager mMediaNotificationManager;
 
+    // Establishes radio connection
     private RadioPlayback mPlayback;
 
     // Media Sessions
@@ -45,6 +53,9 @@ public class RadioPlayerService extends Service implements
 
     private static final boolean ALLOW_REBIND = true;
 
+    /**
+     * Initializes managers, MusicBrainz service
+     */
     @Override
     public void onCreate() {
         super.onCreate();
@@ -70,6 +81,12 @@ public class RadioPlayerService extends Service implements
         mMediaNotificationManager = new MediaNotificationManager(this);
     }
 
+    /**
+     * Called when service starts
+     * @param intent Intent passed to service via startService() method (may be null)
+     * @param flags Additional data about start request
+     * @param startId Unique ID representing specific start request
+     */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = null;
@@ -77,6 +94,7 @@ public class RadioPlayerService extends Service implements
             action = intent.getAction();
         }
 
+        // Play radio if play action
         if (CMD_PLAY.equals(action)) {
             // Requesting audio focus will handle creating the player and playing the stream
             int result = mAudioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
@@ -89,6 +107,9 @@ public class RadioPlayerService extends Service implements
         return START_NOT_STICKY;
     }
 
+    /*
+     * Callback methods for binding lifecycle
+     */
     @Override
     public IBinder onBind(Intent intent) {
         return mBinder;
@@ -104,6 +125,9 @@ public class RadioPlayerService extends Service implements
         return ALLOW_REBIND;
     }
 
+    /**
+      * Stops player, releases media player instance
+     */
     @Override
     public void onDestroy() {
         if (mAudioManager != null) {
@@ -125,10 +149,20 @@ public class RadioPlayerService extends Service implements
         return mMediaSession.getSessionToken();
     }
 
+    /**
+     * Searches MusicBrainz database for 'release id' associated with song, then broadcasts cover art URL
+     * @param title Title of song
+     * @param artist Artist of song
+     */
     private void getCoverArtUrl(String title, String artist) {
         Log.d("====", "getCoverArtUrl");
+        // Formats query
         String query = UrlUtils.formatMusicBrainzQuery(title, artist);
+
+        // Create callback object
         Call<RecordingResponse> recordingResponseCall = musicBrainzService.getMBID(query);
+
+        // Enqueue query, handle response
         recordingResponseCall.enqueue(new Callback<RecordingResponse>() {
             @Override
             public void onResponse(Response<RecordingResponse> response, Retrofit retrofit) {
@@ -208,6 +242,10 @@ public class RadioPlayerService extends Service implements
         }
     }
 
+    /**
+     * Callback to adjust sound according to audio focus
+     * @param focusChange Integer associated with an action from AudioManager
+     */
     @Override
     public void onAudioFocusChange(int focusChange) {
         switch(focusChange) {

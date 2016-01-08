@@ -108,6 +108,12 @@ public class RadioPlayback implements MediaPlayer.OnCuePointReceivedListener,
         mPlayer.setOnStateChangedListener(this);
     }
 
+    /**
+     * Player detects cue point (meta data in stream) containing title/artist of song.
+     * Method refreshes fields with this data and broadcasts it.
+     * @param mediaPlayer Source of event
+     * @param cuePoint Bundle containing title/artist data
+     */
     @Override
     public void onCuePointReceived(MediaPlayer mediaPlayer, Bundle cuePoint) {
         if (mPlayer == mediaPlayer) {
