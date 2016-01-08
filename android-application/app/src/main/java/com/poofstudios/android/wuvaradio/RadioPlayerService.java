@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.os.Binder;
-import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
@@ -18,10 +17,7 @@ import android.util.Log;
 import com.poofstudios.android.wuvaradio.api.MusicBrainzApi;
 import com.poofstudios.android.wuvaradio.api.MusicBrainzService;
 import com.poofstudios.android.wuvaradio.api.model.RecordingResponse;
-import com.poofstudios.android.wuvaradio.utils.StringUtils;
 import com.poofstudios.android.wuvaradio.utils.UrlUtils;
-import com.tritondigital.player.MediaPlayer;
-import com.tritondigital.player.TritonPlayer;
 
 import java.util.HashMap;
 
@@ -31,9 +27,8 @@ import retrofit.Response;
 import retrofit.Retrofit;
 
 public class RadioPlayerService extends Service implements
-        MediaPlayer.OnCuePointReceivedListener,
         AudioManager.OnAudioFocusChangeListener,
-        MediaPlayer.OnStateChangedListener {
+        RadioPlayback.Callback {
 
     // LocalBroadcastManager fields
     public static final String INTENT_UPDATE_COVER_ART = "INTENT_UPDATE_COVER_ART";
@@ -42,22 +37,15 @@ public class RadioPlayerService extends Service implements
     public static final String EXTRA_TITLE = "EXTRA_TITLE";
     public static final String EXTRA_ARTIST = "EXTRA_ARTIST";
 
-    private static final String CUE_TITLE = "cue_title";
-    private static final String TRACK_ARTIST_NAME = "track_artist_name";
-
     public static final String CMD_PLAY = "CMD_PLAY";
 
-    // TODO Get actual Broadcaster and Name from WUVA
-    private static final String STATION_BROADCASTER = "WUVA";
-    private static final String STATION_NAME = "WUVA";
-    private static final String STATION_MOUNT = "WUVA";
-
     private final IBinder mBinder = new LocalBinder();
-    private TritonPlayer mPlayer = null;
     private AudioManager mAudioManager = null;
     private MusicBrainzService musicBrainzService = null;
     private LocalBroadcastManager localBroadcastManager = null;
     private MediaNotificationManager mMediaNotificationManager;
+
+    private RadioPlayback mPlayback;
 
     // Media Sessions
     private MediaSessionCompat mMediaSession = null;
@@ -65,7 +53,6 @@ public class RadioPlayerService extends Service implements
     private static final long PLAYBACK_ACTIONS = PlaybackStateCompat.ACTION_PLAY |
             PlaybackStateCompat.ACTION_STOP;
 
-    private boolean isForeground = false;
     private static final boolean ALLOW_REBIND = true;
 
     private String currentArtist;
@@ -78,6 +65,9 @@ public class RadioPlayerService extends Service implements
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         musicBrainzService = MusicBrainzApi.getService();
         localBroadcastManager = LocalBroadcastManager.getInstance(this);
+
+        mPlayback = new RadioPlayback(this);
+        mPlayback.setCallback(this);
 
         // Start new MediaSession
         ComponentName mediaButtonReceiver = new ComponentName(this, RemoteControlReceiver.class);
@@ -109,8 +99,7 @@ public class RadioPlayerService extends Service implements
             // Requesting audio focus will handle creating the player and playing the stream
             int result = mAudioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
             if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                startPlayer();
-                updatePlaybackState();
+                mPlayback.play();
             } else {
                 Log.d("WUVA", "AudioFocus Gain Not Granted");
             }
@@ -138,67 +127,15 @@ public class RadioPlayerService extends Service implements
         if (mAudioManager != null) {
             int result = mAudioManager.abandonAudioFocus(this);
             if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                stopPlayer();
-                releasePlayer();
+                mPlayback.stop();
+                mPlayback.release();
             } else {
                 Log.d("WUVA", "AudioFocus Abandon Not Granted");
             }
         }
         stopForeground(true);
-        isForeground = false;
         mMediaSession.release();
         super.onDestroy();
-    }
-
-    private void stopPlayer() {
-        if (mPlayer != null && mPlayer.getState() == TritonPlayer.STATE_PLAYING) {
-            mPlayer.stop();
-        }
-    }
-
-    private void releasePlayer() {
-        if (mPlayer != null) {
-            mPlayer.release();
-            mPlayer = null;
-        }
-    }
-
-    private void duckPlayer() {
-        if (mPlayer != null && mPlayer.getState() == TritonPlayer.STATE_PLAYING) {
-            mPlayer.setVolume(TritonPlayer.VOLUME_DUCK);
-        }
-    }
-
-    private void startPlayer() {
-        if (mPlayer == null || mPlayer.getState() == TritonPlayer.STATE_RELEASED) {
-            createPlayer();
-        } else if (mPlayer.getState() != TritonPlayer.STATE_PLAYING) {
-            mPlayer.play();
-        }
-        mPlayer.setVolume(TritonPlayer.VOLUME_NORMAL);
-
-        // Set MediaSession to active
-        // Tells system to route controls to the app
-        if (!mMediaSession.isActive()) {
-            mMediaSession.setActive(true);
-        }
-    }
-
-    private void createPlayer() {
-        // Configure player settings
-        Bundle settings = new Bundle();
-        settings.putString(TritonPlayer.SETTINGS_STATION_BROADCASTER, STATION_BROADCASTER);
-        settings.putString(TritonPlayer.SETTINGS_STATION_NAME, STATION_NAME);
-        settings.putString(TritonPlayer.SETTINGS_STATION_MOUNT, STATION_MOUNT);
-
-        // Create and start a new player
-        if (mPlayer != null) {
-            mPlayer.release();
-        }
-        mPlayer = new TritonPlayer(this, settings);
-        mPlayer.setOnCuePointReceivedListener(this);
-        mPlayer.setOnStateChangedListener(this);
-        mPlayer.play();
     }
 
     @Nullable
@@ -253,28 +190,20 @@ public class RadioPlayerService extends Service implements
         });
     }
 
-    private void updateMediaSessionMetadata() {
-        MediaMetadataCompat.Builder metadataBuilder = new MediaMetadataCompat.Builder();
-        metadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, currentTitle);
-        metadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, currentArtist);
-        // TODO Handle album art
-        mMediaSession.setMetadata(metadataBuilder.build());
+    private void updateMediaSessionMetadata(MediaMetadataCompat metadata) {
+        // Update the metadata for the session
+        mMediaSession.setMetadata(metadata);
+
+        // TODO Fetch cover art url
+//        // Query for the new cover art
+//        getCoverArtUrl(title, artist);  // Callback will set currentCoverArtUrl
     }
 
     private void updatePlaybackState() {
         PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder();
         stateBuilder.setActions(PLAYBACK_ACTIONS);
 
-        int state = PlaybackStateCompat.STATE_ERROR;
-        switch (mPlayer.getState()) {
-            case TritonPlayer.STATE_PLAYING:
-            case TritonPlayer.STATE_CONNECTING:
-                state = PlaybackStateCompat.STATE_PLAYING;
-                break;
-            case TritonPlayer.STATE_STOPPED:
-                state = PlaybackStateCompat.STATE_STOPPED;
-                break;
-        }
+        int state = mPlayback.getState();
         long position = PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN;
         stateBuilder.setState(state, position, 1.0f);
 
@@ -301,62 +230,32 @@ public class RadioPlayerService extends Service implements
     }
 
     @Override
-    public void onCuePointReceived(MediaPlayer mediaPlayer, Bundle cuePoint) {
-        if (mPlayer == mediaPlayer) {
-            if (cuePoint != null) {
-                String title = StringUtils.capitalizeEveryWord(cuePoint.getString(CUE_TITLE));
-                String artist = StringUtils.capitalizeEveryWord(cuePoint.getString(TRACK_ARTIST_NAME));
-                if (title != null && artist != null) {
-                    // Update current values
-                    this.currentArtist = artist;
-                    this.currentTitle = title;
-                    this.currentCoverArtUrl = "";     // Reset value until callback received
-
-                    // Send a broadcast with the new title and artist
-                    HashMap<String, String> messageData = new HashMap<>();
-                    messageData.put(EXTRA_TITLE, title);
-                    messageData.put(EXTRA_ARTIST, artist);
-                    sendMessage(INTENT_UPDATE_TITLE_ARTIST, messageData);
-                    updateMediaSessionMetadata();
-
-                    // Query for the new cover art
-                    getCoverArtUrl(title, artist);  // Callback will set currentCoverArtUrl
-                }
-            }
-        }
-    }
-
-    @Override
     public void onAudioFocusChange(int focusChange) {
         switch(focusChange) {
             // Gained focus to play music
             case AudioManager.AUDIOFOCUS_GAIN:
-                startPlayer();
+                mPlayback.play();
                 break;
 
             // Lost focus for a long period of time, so release memory
             case AudioManager.AUDIOFOCUS_LOSS:
-                stopPlayer();
-                releasePlayer();
+                mPlayback.stop();
+                mPlayback.release();
                 break;
 
             // Lost focus for a short time, will regain soon
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                stopPlayer();
+                mPlayback.stop();
                 break;
 
             // Lost focus for a short time, but can still play quietly
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
-                duckPlayer();
+                mPlayback.duck();
                 break;
         }
         updatePlaybackState();
     }
 
-    @Override
-    public void onStateChanged(MediaPlayer mediaPlayer, int state) {
-        updatePlaybackState();
-    }
 
     public class LocalBinder extends Binder {
         RadioPlayerService getService() {
@@ -365,19 +264,39 @@ public class RadioPlayerService extends Service implements
         }
     }
 
+    // Implementation of RadioPlayback Callback interface
+    /**
+     * Called when playback updates playback state. Overrides method from RadioPlayback
+     * Callback interface
+     */
+    @Override
+    public void onPlaybackStateChanged() {
+        updatePlaybackState();
+    }
+
+    /**
+     * Called when playback receives new metadata. Overrides method from RadioPlayback
+     * Callback interface
+     * @param metadata metadata from the stream
+     */
+    @Override
+    public void onMetadataChanged(MediaMetadataCompat metadata) {
+        updateMediaSessionMetadata(metadata);
+    }
+
+    /**
+     * Receives transport controls, media buttons, etc. that affect media playback
+     */
     private final class MediaSessionCallback extends MediaSessionCompat.Callback {
-        // Requests to begin playback
+
         @Override
         public void onPlay() {
-            Log.d("====", "MediaSessionCallback onPlay");
-            startPlayer();
+            mPlayback.play();
         }
 
-        // Requests to stop playback
         @Override
         public void onStop() {
-            Log.d("====", "MediaSessionCallback onStop");
-            stopPlayer();
+            mPlayback.stop();
         }
 
     }
