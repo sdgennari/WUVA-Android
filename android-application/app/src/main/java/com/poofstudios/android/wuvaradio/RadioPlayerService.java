@@ -6,10 +6,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.RatingCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
@@ -17,6 +20,7 @@ import android.util.Log;
 import com.poofstudios.android.wuvaradio.api.MusicBrainzApi;
 import com.poofstudios.android.wuvaradio.api.MusicBrainzService;
 import com.poofstudios.android.wuvaradio.api.model.RecordingResponse;
+import com.poofstudios.android.wuvaradio.model.Favorite;
 import com.poofstudios.android.wuvaradio.utils.UrlUtils;
 
 import retrofit.Call;
@@ -41,6 +45,9 @@ public class RadioPlayerService extends Service implements
 
     // Manages notifications
     private MediaNotificationManager mMediaNotificationManager;
+
+    // Manages user favorites
+    private FavoriteManager mFavoriteManager;
 
     // Establishes radio connection
     private RadioPlayback mPlayback;
@@ -79,6 +86,7 @@ public class RadioPlayerService extends Service implements
         mMediaSession.setCallback(mediaSessionCallback);
 
         mMediaNotificationManager = new MediaNotificationManager(this);
+        mFavoriteManager = FavoriteManager.getFavoriteManager(this);
     }
 
     /**
@@ -196,15 +204,10 @@ public class RadioPlayerService extends Service implements
      */
     private void addCoverArtUrlToMetadata(String coverArtUrl) {
         Log.d("====", "addCoverArtUrlToMetadata");
-        MediaDescriptionCompat oldDescription = mMediaSession.getController().getMetadata()
-                .getDescription();
 
         // Transfer the old metadata to a new metadata object
-        MediaMetadataCompat.Builder metadataBuilder = new MediaMetadataCompat.Builder();
-        metadataBuilder.putText(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE,
-                oldDescription.getTitle());
-        metadataBuilder.putText(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE,
-                oldDescription.getSubtitle());
+        MediaMetadataCompat.Builder metadataBuilder = new MediaMetadataCompat.Builder(
+                mMediaSession.getController().getMetadata());
 
         // Add the new coverArtUrl to the metadata
         metadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, coverArtUrl);
@@ -214,7 +217,23 @@ public class RadioPlayerService extends Service implements
     }
 
     /**
-     * Updates the session metadata and queries for the cover art url
+     * Adds a rating to the current session metadata
+     * @param rating rating of the current song
+     */
+    private void addRatingToMetadata(RatingCompat rating) {
+        MediaMetadataCompat.Builder metadataBuilder = new MediaMetadataCompat.Builder(
+                mMediaSession.getController().getMetadata());
+
+        // Add the rating to the metadata
+        metadataBuilder.putRating(MediaMetadataCompat.METADATA_KEY_USER_RATING, rating);
+
+        // Update the metadata for the session
+        mMediaSession.setMetadata(metadataBuilder.build());
+    }
+
+    /**
+     * Updates the session metadata and queries for the cover art url. Metadata deals with the info
+     * about the song that is currently playing (title, artist, etc.)
      * @param metadata new metadata for the session
      */
     private void updateMediaSessionMetadata(MediaMetadataCompat metadata) {
@@ -222,12 +241,18 @@ public class RadioPlayerService extends Service implements
         // Update the metadata for the session
         mMediaSession.setMetadata(metadata);
 
-        // Query for the new cover art
         MediaDescriptionCompat description = metadata.getDescription();
         if (description != null) {
-            // Get the values from the metadata
             String title = String.valueOf(description.getTitle());
             String artist = String.valueOf(description.getSubtitle());
+
+            // Check if the song is a favorite
+            boolean isFavorite = mFavoriteManager.isFavorite(new Favorite(title, artist));
+
+            // Add the rating to the metadata
+            RatingCompat rating = RatingCompat.newHeartRating(isFavorite);
+            addRatingToMetadata(rating);
+
 
             // Make an async query to get the cover art url
             getCoverArtUrl(title, artist);
@@ -235,7 +260,8 @@ public class RadioPlayerService extends Service implements
     }
 
     /**
-     * Updates the session playback state and creates a notification if necessary
+     * Updates the session playback state and creates a notification if necessary. PlaybackState
+     * deals with the controls available to the user (play, stop, favorite, etc.)
      */
     private void updatePlaybackState() {
         Log.d("====", "updatePlaybackState " + mPlayback.getState());
@@ -339,5 +365,35 @@ public class RadioPlayerService extends Service implements
             RadioPlayerService.this.stopSelf();
         }
 
+        /**
+         * Handles custom actions send to the media session.
+         * ACTION_FAVORITE updates a track in the user's favorite
+         * @param action action sent in the custom action call
+         * @param extras optional extras
+         */
+        @Override
+        public void onCustomAction(@NonNull String action, Bundle extras) {
+            if (MediaNotificationManager.ACTION_FAVORITE.equals(action)) {
+                MediaMetadataCompat metadata = mMediaSession.getController().getMetadata();
+                if (metadata != null && metadata.getDescription() != null) {
+                    MediaDescriptionCompat description = metadata.getDescription();
+
+                    // Create a favorite object from the current song
+                    Favorite favorite = new Favorite(String.valueOf(description.getTitle()),
+                            String.valueOf(description.getSubtitle()));
+
+                    // If not already a favorite, then added to favorites
+                    // Otherwise is removed from favorites
+                    boolean isFavorite = !mFavoriteManager.isFavorite(favorite);
+
+                    // Update the favorite in the user's favorite list
+                    mFavoriteManager.setFavorite(favorite, isFavorite);
+
+                    // Update the session metadata
+                    RatingCompat rating = RatingCompat.newHeartRating(isFavorite);
+                    addRatingToMetadata(rating);
+                }
+            }
+        }
     }
 }
