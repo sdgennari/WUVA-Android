@@ -2,9 +2,7 @@ package com.poofstudios.android.wuvaradio.ui;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v4.media.MediaDescriptionCompat;
-import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
@@ -18,26 +16,12 @@ import android.widget.TextView;
 import com.poofstudios.android.wuvaradio.R;
 import com.squareup.picasso.Picasso;
 
-public class PlaybackControlsFragment extends Fragment {
+public class PlaybackControlsFragment extends MediaBaseFragment {
 
     private ImageView mCoverArtView;
     private ImageButton mPlayStopButton;
     private TextView mTitleView;
     private TextView mArtistView;
-
-    private final MediaControllerCompat.Callback mControllerCallback = new MediaControllerCompat.Callback() {
-        @Override
-        public void onPlaybackStateChanged(PlaybackStateCompat state) {
-            PlaybackControlsFragment.this.updatePlaybackState(state);
-        }
-
-        @Override
-        public void onMetadataChanged(MediaMetadataCompat metadata) {
-            if (metadata != null) {
-                PlaybackControlsFragment.this.updateMediaDescription(metadata.getDescription());
-            }
-        }
-    };
 
     public PlaybackControlsFragment() {
         // Required empty public constructor
@@ -58,27 +42,8 @@ public class PlaybackControlsFragment extends Fragment {
         return rootView;
     }
 
-    public void onStart() {
-        super.onStart();
-        if (getActivity() != null && getActivity().getSupportMediaController() != null) {
-            onControllerConnected();
-        }
-    }
-
-    public void onControllerConnected() {
-        MediaControllerCompat controller = getActivity().getSupportMediaController();
-        if (controller != null) {
-            controller.registerCallback(mControllerCallback);
-            if (controller.getPlaybackState() != null) {
-                updatePlaybackState(controller.getPlaybackState());
-            }
-            if (controller.getMetadata() != null) {
-                updateMediaDescription(controller.getMetadata().getDescription());
-            }
-        }
-    }
-
-    private void updatePlaybackState(PlaybackStateCompat playbackState) {
+    @Override
+    protected void updatePlaybackState(PlaybackStateCompat playbackState) {
         if (playbackState == null) {
             return;
         }
@@ -91,7 +56,8 @@ public class PlaybackControlsFragment extends Fragment {
         mPlayStopButton.setImageResource(icon);
     }
 
-    private void updateMediaDescription(MediaDescriptionCompat description) {
+    @Override
+    protected void updateMediaDescription(MediaDescriptionCompat description) {
         if (description == null) {
             return;
         }
