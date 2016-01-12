@@ -4,6 +4,12 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
 
+    <dimen name="padding_default">16dp</dimen>
+    <dimen name="padding_half">8dp</dimen>
+    <dimen name="padding_double">32dp</dimen>
+
+    <dimen name="controls_image_size">64dp</dimen>
+
     <dimen name="tab_offset">72dp</dimen>
     <dimen name="tab_max_width">264dp</dimen>
     <dimen name="tab_min_width">72dp</dimen>

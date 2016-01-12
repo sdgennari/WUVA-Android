@@ -55,7 +55,7 @@ public abstract class MediaBaseActivity extends AppCompatActivity {
      * Connects to the current MediaSession to receive callbacks
      * @param token token from the current MediaSession
      */
-    private void connectToSession(MediaSessionCompat.Token token) {
+    protected void connectToSession(MediaSessionCompat.Token token) {
         Log.d("====", "connectToSession");
         try {
             MediaControllerCompat mediaController = new MediaControllerCompat(MediaBaseActivity.this, token);
@@ -71,10 +71,12 @@ public abstract class MediaBaseActivity extends AppCompatActivity {
             if (metadata != null) {
                 updateMediaDescription(metadata.getDescription());
             }
+
+            // Notify subclasses that the session has been connected
+            onSessionConnected();
         } catch (RemoteException e) {
             Log.e("WUVA", e.getLocalizedMessage());
         }
-
     }
 
     /**
@@ -126,4 +128,12 @@ public abstract class MediaBaseActivity extends AppCompatActivity {
      * @param description new MediaDescription from the session metadata
      */
     protected abstract void updateMediaDescription(MediaDescriptionCompat description);
+
+    /**
+     * Notifies subclasses that the session has been connected and the media controller has be
+     * properly configured
+     */
+    protected void onSessionConnected() {
+        // Extended by some subclasses
+    }
 }
