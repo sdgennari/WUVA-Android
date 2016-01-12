@@ -1,20 +1,12 @@
 package com.poofstudios.android.wuvaradio.ui;
 
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.os.RemoteException;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.media.MediaDescriptionCompat;
-import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
-import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
@@ -26,10 +18,7 @@ import android.widget.TextView;
 import com.poofstudios.android.wuvaradio.R;
 import com.poofstudios.android.wuvaradio.RadioPlayerService;
 
-public class MainActivity extends AppCompatActivity {
-
-    private RadioPlayerService mService;
-    private boolean mServiceBound = false;
+public class MainActivity extends MediaBaseActivity {
 
     Button mStopButton;
     Button mStartButton;
@@ -83,36 +72,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-
-        // Bind to the service
-        Intent bindIntent = new Intent(this, RadioPlayerService.class);
-        bindService(bindIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        doUnbindService();
-        if (getSupportMediaController() != null) {
-            getSupportMediaController().unregisterCallback(mControllerCallback);
-        }
-    }
-
-    private void doUnbindService() {
-        if (mServiceBound) {
-            unbindService(mServiceConnection);
-            mServiceBound = false;
-        }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
-
-    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
@@ -134,37 +93,8 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * Connects to the current MediaSession to receive callbacks
-     * @param token token from the current MediaSession
-     */
-    private void connectToSession(MediaSessionCompat.Token token) {
-        Log.d("====", "connectToSession");
-        try {
-            MediaControllerCompat mediaController = new MediaControllerCompat(MainActivity.this, token);
-            setSupportMediaController(mediaController);
-            mediaController.registerCallback(mControllerCallback);
-
-            // Update the playback state
-            PlaybackStateCompat playbackState = mediaController.getPlaybackState();
-            updatePlaybackState(playbackState);
-
-            // Update the metadata description
-            MediaMetadataCompat metadata = mediaController.getMetadata();
-            if (metadata != null) {
-                updateMediaDescription(metadata.getDescription());
-            }
-        } catch (RemoteException e) {
-            Log.e("WUVA", e.getLocalizedMessage());
-        }
-
-    }
-
-    /**
-     * Updates UI based on the playback state
-     * @param playbackState current playback state
-     */
-    private void updatePlaybackState(PlaybackStateCompat playbackState) {
+    @Override
+    protected void updatePlaybackState(PlaybackStateCompat playbackState) {
         if (playbackState == null) {
             return;
         }
@@ -187,11 +117,8 @@ public class MainActivity extends AppCompatActivity {
         // playbackState.getCustomActions()
     }
 
-    /**
-     * Updates the UI with the new media description
-     * @param description new MediaDescription from the session metadata
-     */
-    private void updateMediaDescription(MediaDescriptionCompat description) {
+    @Override
+    protected void updateMediaDescription(MediaDescriptionCompat description) {
         Log.d("====", "updateMediaDescription");
         if (description == null) {
             return;
@@ -207,42 +134,4 @@ public class MainActivity extends AppCompatActivity {
             mCoverArtUrlView.setText("Pending...");
         }
     }
-
-    /**
-     * Defines callbacks for service binding
-     * Passed as a param to bindService()
-     */
-    private ServiceConnection mServiceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.d("====", "onServiceConnected");
-            mService = ((RadioPlayerService.LocalBinder) service).getService();
-            mServiceBound = true;
-
-            connectToSession(mService.getSessionToken());
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            mServiceBound = false;
-        }
-    };
-
-    /**
-     * Callback for MediaController to update the notification when the session changes
-     */
-    private final MediaControllerCompat.Callback mControllerCallback = new MediaControllerCompat.Callback() {
-
-        @Override
-        public void onPlaybackStateChanged(PlaybackStateCompat state) {
-            updatePlaybackState(state);
-        }
-
-        @Override
-        public void onMetadataChanged(MediaMetadataCompat metadata) {
-            if (metadata != null) {
-                updateMediaDescription(metadata.getDescription());
-            }
-        }
-    };
 }
