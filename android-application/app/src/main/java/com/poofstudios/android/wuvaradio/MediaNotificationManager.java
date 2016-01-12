@@ -18,6 +18,8 @@ import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
+import com.poofstudios.android.wuvaradio.ui.MainActivity;
+
 public class MediaNotificationManager extends BroadcastReceiver {
 
     // Constants

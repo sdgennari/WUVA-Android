@@ -1,4 +1,4 @@
-package com.poofstudios.android.wuvaradio;
+package com.poofstudios.android.wuvaradio.ui;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -22,6 +22,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.TextView;
+
+import com.poofstudios.android.wuvaradio.R;
+import com.poofstudios.android.wuvaradio.RadioPlayerService;
 
 public class MainActivity extends AppCompatActivity {
 

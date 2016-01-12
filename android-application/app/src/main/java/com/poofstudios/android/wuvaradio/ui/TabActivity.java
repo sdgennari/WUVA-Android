@@ -1,8 +1,6 @@
-package com.poofstudios.android.wuvaradio;
+package com.poofstudios.android.wuvaradio.ui;
 
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -10,7 +8,8 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
+
+import com.poofstudios.android.wuvaradio.R;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,11 +26,12 @@ public class TabActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+
         mViewPager = (ViewPager) findViewById(R.id.viewpager);
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-        adapter.addFragment(new PlaceholderFragment(), "Radio");
-        adapter.addFragment(new PlaceholderFragment(), "Favorites");
-        adapter.addFragment(new PlaceholderFragment(), "Recently Played");
+        adapter.addFragment(new RadioFragment(), getString(R.string.title_radio));
+        adapter.addFragment(new FavoriteFragment(), getString(R.string.title_favorite));
+        adapter.addFragment(new RecentlyPlayedFragment(), getString(R.string.title_recently_played));
         mViewPager.setAdapter(adapter);
 
         mTabLayout = (TabLayout) findViewById(R.id.tab_layout);

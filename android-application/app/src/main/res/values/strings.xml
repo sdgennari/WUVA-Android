@@ -1,10 +1,15 @@
 <resources>
-    <string name="app_name">WUVARadio</string>
-    <string name="action_settings">Settings</string>
+    <string name="app_name">92.7 Nash Icon</string>
+
+    <!-- Fragment Page Titles -->
+    <string name="title_radio">Radio</string>
+    <string name="title_favorite">Favorites</string>
+    <string name="title_recently_played">Recently Played</string>
 
     <!-- Actions -->
     <string name="action_play">Play</string>
     <string name="action_stop">Stop</string>
     <string name="action_favorite">Favorite</string>
-    <string name="title_activity_tab">TabActivity</string>
+    <string name="action_settings">Settings</string>
+
 </resources>

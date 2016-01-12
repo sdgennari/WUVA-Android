@@ -286,7 +286,7 @@ public class RadioPlayerService extends Service implements
 
 
     public class LocalBinder extends Binder {
-        RadioPlayerService getService() {
+        public RadioPlayerService getService() {
             // Return this instance of the service to expose public methods
             return RadioPlayerService.this;
         }
