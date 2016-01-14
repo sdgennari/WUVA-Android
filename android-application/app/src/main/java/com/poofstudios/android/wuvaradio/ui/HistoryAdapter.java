@@ -1,7 +1,5 @@
 package com.poofstudios.android.wuvaradio.ui;
 
-import android.support.v4.media.MediaDescriptionCompat;
-import android.support.v4.media.MediaMetadataCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +8,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.poofstudios.android.wuvaradio.R;
+import com.poofstudios.android.wuvaradio.model.Track;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -17,7 +16,7 @@ import java.util.List;
 
 public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHolder> {
 
-    private List<MediaDescriptionCompat> mCuePointDescriptionList;
+    private List<Track> mCuePointDescriptionList;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public TextView mTitleView;
@@ -37,7 +36,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
         this.mCuePointDescriptionList = new ArrayList<>();
     }
 
-    public void setData(List<MediaDescriptionCompat> data) {
+    public void setData(List<Track> data) {
         this.mCuePointDescriptionList = data;
     }
 
@@ -53,15 +52,15 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
     // Replace the contents of the list item
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        MediaDescriptionCompat description = mCuePointDescriptionList.get(position);
+        Track track = mCuePointDescriptionList.get(position);
 
-        holder.mTitleView.setText(description.getTitle());
-        holder.mArtistView.setText(description.getSubtitle());
+        holder.mTitleView.setText(track.getTitle());
+        holder.mArtistView.setText(track.getArtist());
 
         // Load cover art image if available
-        if (description.getIconUri() != null) {
+        if (track.getCoverArtUrl() != null) {
             Picasso.with(holder.mCoverArtView.getContext())
-                    .load(description.getIconUri().toString())
+                    .load(track.getCoverArtUrl())
                     .placeholder(R.drawable.cover_art_placeholder)
                     .error(R.drawable.cover_art_placeholder)
                     .into(holder.mCoverArtView);
