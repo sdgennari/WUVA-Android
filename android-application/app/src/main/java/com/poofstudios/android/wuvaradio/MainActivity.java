@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
 
         mToolbar.setTitle(mTitle);
         //mToolbar.getBackground().setAlpha(0);
-        mToolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.colorAccent));
+        mToolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.textColorPrimary));
         mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
