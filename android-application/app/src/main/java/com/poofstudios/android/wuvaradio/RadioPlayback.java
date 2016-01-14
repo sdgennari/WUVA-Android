@@ -16,13 +16,13 @@ public class RadioPlayback implements MediaPlayer.OnCuePointReceivedListener,
         MediaPlayer.OnStateChangedListener{
 
     // TritonPlayer metadata fields
-    private static final String CUE_TITLE = "cue_title";
-    private static final String TRACK_ARTIST_NAME = "track_artist_name";
+    public static final String CUE_TITLE = "cue_title";
+    public static final String TRACK_ARTIST_NAME = "track_artist_name";
 
     // TODO Get actual Broadcaster and Name from WUVA
-    private static final String STATION_BROADCASTER = "WUVA";
-    private static final String STATION_NAME = "WUVA";
-    private static final String STATION_MOUNT = "WUVA";
+    public static final String STATION_BROADCASTER = "WUVA";
+    public static final String STATION_NAME = "WUVA";
+    public static final String STATION_MOUNT = "WUVA";
 
     // mState is one of the states given by PlaybackStateCompat.STATE_*
     private int mState;

@@ -39,6 +39,7 @@ public class TabActivity extends MediaBaseActivity {
         adapter.addFragment(new RadioFragment(), getString(R.string.title_radio));
         adapter.addFragment(new FavoriteFragment(), getString(R.string.title_favorite));
         adapter.addFragment(new RecentlyPlayedFragment(), getString(R.string.title_recently_played));
+        mViewPager.setOffscreenPageLimit(3);
         mViewPager.setAdapter(adapter);
 
         mTabLayout = (TabLayout) findViewById(R.id.tab_layout);
