@@ -1,20 +1,20 @@
 package com.poofstudios.android.wuvaradio.model;
 
+import android.support.annotation.NonNull;
+
 import com.google.gson.annotations.SerializedName;
 
 public class Favorite {
 
-    @SerializedName("title")
-    public String mTitle;
+    @NonNull
+    @SerializedName("track")
+    private Track mTrack;
 
-    @SerializedName("artist")
-    public String mArtist;
+    @SerializedName("created_at")
+    private long createdAt;
 
-    long createdAt;
-
-    public Favorite(String title, String artist) {
-        this.mTitle = title;
-        this.mArtist = artist;
+    public Favorite(@NonNull Track track) {
+        this.mTrack = track;
 
         // Mark when this song was last created
         createdAt = System.currentTimeMillis();
@@ -24,7 +24,8 @@ public class Favorite {
     public boolean equals(Object o) {
         if (o instanceof Favorite) {
             Favorite favorite = (Favorite) o;
-            return (this.mTitle.equals(favorite.mTitle) && this.mArtist.equals(favorite.mArtist));
+            // This will only compare the title and artist of the track
+            return this.mTrack.equals(favorite.mTrack);
         }
         return false;
     }
@@ -32,8 +33,18 @@ public class Favorite {
     // Must implement hashCode since FavoriteManager uses a HashMap
     @Override
     public int hashCode() {
-        int titleHash = mTitle.hashCode();
-        int artistHash = mArtist.hashCode();
-        return 37*titleHash + artistHash;
+        return this.mTrack.hashCode();
+    }
+
+    public long getCreatedAt() {
+        return this.createdAt;
+    }
+
+    public Track getTrack() {
+        return this.mTrack;
+    }
+
+    public void setTrackCoverArtUrl(String coverArtUrl) {
+        this.mTrack.setCoverArtUrl(coverArtUrl);
     }
 }

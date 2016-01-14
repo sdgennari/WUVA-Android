@@ -7,11 +7,9 @@ import com.google.gson.annotations.SerializedName;
 
 public class Track {
 
-    @NonNull
     @SerializedName("title")
     private String mTitle;
 
-    @NonNull
     @SerializedName("artist")
     private String mArtist;
 
@@ -19,11 +17,20 @@ public class Track {
     @SerializedName("cover_art_url")
     private String mCoverArtUrl;
 
-    public Track(@NonNull String title, @NonNull String artist) {
+    public Track(CharSequence title, CharSequence artist) {
+        this(String.valueOf(title), String.valueOf(artist));
+    }
+
+    public Track(CharSequence title, CharSequence artist,
+                 @Nullable String coverArtUrl) {
+        this(String.valueOf(title), String.valueOf(artist), coverArtUrl);
+    }
+
+    public Track(String title, String artist) {
         this(title, artist, null);
     }
 
-    public Track(@NonNull String title, @NonNull String artist, @Nullable String coverArtUrl) {
+    public Track(String title, String artist, @Nullable String coverArtUrl) {
         this.mTitle = title;
         this.mArtist = artist;
         this.mCoverArtUrl = coverArtUrl;

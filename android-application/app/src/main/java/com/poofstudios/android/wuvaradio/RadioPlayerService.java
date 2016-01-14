@@ -21,6 +21,7 @@ import com.poofstudios.android.wuvaradio.api.MusicBrainzApi;
 import com.poofstudios.android.wuvaradio.api.MusicBrainzService;
 import com.poofstudios.android.wuvaradio.api.model.RecordingResponse;
 import com.poofstudios.android.wuvaradio.model.Favorite;
+import com.poofstudios.android.wuvaradio.model.Track;
 import com.poofstudios.android.wuvaradio.utils.UrlUtils;
 
 import retrofit.Call;
@@ -247,7 +248,8 @@ public class RadioPlayerService extends Service implements
             String artist = String.valueOf(description.getSubtitle());
 
             // Check if the song is a favorite
-            boolean isFavorite = mFavoriteManager.isFavorite(new Favorite(title, artist));
+            Track track = new Track(title, artist);
+            boolean isFavorite = mFavoriteManager.isFavorite(new Favorite(track));
 
             // Add the rating to the metadata
             RatingCompat rating = RatingCompat.newHeartRating(isFavorite);
@@ -379,8 +381,8 @@ public class RadioPlayerService extends Service implements
                     MediaDescriptionCompat description = metadata.getDescription();
 
                     // Create a favorite object from the current song
-                    Favorite favorite = new Favorite(String.valueOf(description.getTitle()),
-                            String.valueOf(description.getSubtitle()));
+                    Track track = new Track(description.getTitle(), description.getSubtitle());
+                    Favorite favorite = new Favorite(track);
 
                     // If not already a favorite, then added to favorites
                     // Otherwise is removed from favorites
