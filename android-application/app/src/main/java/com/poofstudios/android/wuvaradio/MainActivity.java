@@ -1,9 +1,11 @@
 package com.poofstudios.android.wuvaradio;
 
+import android.app.Notification;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
@@ -11,18 +13,24 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ToggleButton;
 import android.widget.TextView;
 
@@ -45,6 +53,14 @@ public class MainActivity extends AppCompatActivity {
     Button mStartButton;*/
     ToggleButton mStartStopButton;
 
+    // Nav drawer
+    private String[] mNavItems;
+    private DrawerLayout mDrawerLayout;
+    private ListView mDrawerList;
+    private ActionBarDrawerToggle mDrawerToggle;
+
+    private Toolbar mToolbar;
+
     LinearLayout mActivityContent;
     ImageView mCoverArtView;
     TextView mTitleView;
@@ -59,26 +75,46 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Toolbar needed?
-        /*Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);*/
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar);
 
-        // FAB needed?
-        /*
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.play_stop_fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        mToolbar.setTitle(mTitle);
+        //mToolbar.getBackground().setAlpha(0);
+        mToolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.colorAccent));
+        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                mDrawerLayout.openDrawer(Gravity.LEFT);
             }
-        });*/
+        });
 
         mActivityContent = (LinearLayout) findViewById(R.id.activity_content);
         mCoverArtView = (ImageView) findViewById(R.id.cover_art);
         mTitleView = (TextView) findViewById(R.id.title);
         mArtistView = (TextView) findViewById(R.id.artist);
+
+        // Nav drawer
+        mNavItems = new String[] {"Radio", "Favorites", "Recently Played"};
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerList = (ListView) findViewById(R.id.left_drawer);
+
+        mDrawerList.setAdapter(new ArrayAdapter<String>(this,
+                R.layout.drawer_list_item, mNavItems));
+
+        mDrawerToggle = new ActionBarDrawerToggle(
+                this,
+                mDrawerLayout,
+                mToolbar,
+                R.string.drawer_open,
+                R.string.drawer_close);
+
+        mDrawerToggle.setDrawerIndicatorEnabled(true);
+        mDrawerToggle.syncState();
+
+        // Set the drawer toggle as the DrawerListener
+        mDrawerLayout.setDrawerListener(mDrawerToggle);
 
         // New start/stop
         mStartStopButton = (ToggleButton) findViewById(R.id.start_stop_button);
@@ -98,6 +134,20 @@ public class MainActivity extends AppCompatActivity {
         // Load placeholder cover art
         Picasso.with(this).load(R.drawable.cover_art_placeholder).fit().centerInside().into(mCoverArtView);
         mActivityContent.setBackgroundColor(Color.parseColor("#000000"));
+    }
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState)
+    {
+        super.onPostCreate(savedInstanceState);
+        mDrawerToggle.syncState();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig)
+    {
+        super.onConfigurationChanged(newConfig);
+        mDrawerToggle.onConfigurationChanged(newConfig);
     }
 
     private void startService() {
@@ -139,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        //getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
