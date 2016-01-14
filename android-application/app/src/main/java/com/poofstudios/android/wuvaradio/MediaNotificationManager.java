@@ -12,6 +12,7 @@ import android.graphics.BitmapFactory;
 import android.os.RemoteException;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.RatingCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
@@ -87,6 +88,7 @@ public class MediaNotificationManager extends BroadcastReceiver {
                 IntentFilter filter = new IntentFilter();
                 filter.addAction(ACTION_PLAY);
                 filter.addAction(ACTION_STOP);
+                filter.addAction(ACTION_FAVORITE);
                 mService.registerReceiver(this, filter);
 
                 // Move the service to the foreground
@@ -148,6 +150,11 @@ public class MediaNotificationManager extends BroadcastReceiver {
 
         // Add play/stop action
         addPlayStopButton(builder);
+
+        // Add favorite button
+        if (mPlaybackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
+            addFavoriteButton(builder);
+        }
 
         // Get description from metadata
         MediaDescriptionCompat description = mMediaMetadata.getDescription();
@@ -223,10 +230,27 @@ public class MediaNotificationManager extends BroadcastReceiver {
         builder.addAction(icon, label, pendingIntent);
     }
 
+    /**
+     * Adds a favorite button and changes icon if the song is already marked as favorite
+     * @param builder builder for the notification
+     */
+    private void addFavoriteButton(NotificationCompat.Builder builder) {
+        int icon = R.drawable.ic_star_border;
+
+        // If the song is already a favorite, change icon
+        MediaMetadataCompat metadata = mMediaController.getMetadata();
+        if (metadata !=  null) {
+            RatingCompat rating = metadata.getRating(MediaMetadataCompat.METADATA_KEY_USER_RATING);
+            if (rating != null && rating.hasHeart()) {
+                icon = R.drawable.ic_star;
+            }
+        }
+        builder.addAction(icon, mService.getString(R.string.action_favorite), mFavoriteIntent);
+    }
+
     // Extend BroadcastReceiver to handle notification actions
     @Override
-    public void onReceive(Context context, Intent intent) {
-        final String action = intent.getAction();
+    public void onReceive(Context context, Intent intent) {final String action = intent.getAction();
         switch (action) {
             case ACTION_PLAY:
                 mTransportControls.play();
@@ -234,8 +258,10 @@ public class MediaNotificationManager extends BroadcastReceiver {
             case ACTION_STOP:
                 mTransportControls.stop();
                 break;
+            case ACTION_FAVORITE:
+                mTransportControls.sendCustomAction(ACTION_FAVORITE, null);
             default:
-                Log.w("WUVA", "Uknown intent with Action " + action);
+                Log.w("WUVA", "Unknown intent with Action " + action);
         }
     }
 
