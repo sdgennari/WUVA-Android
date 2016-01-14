@@ -5,4 +5,6 @@
     <color name="colorAccent">#1D4AB1</color>
     <color name="textColorPrimary">#222222</color>
     <color name="windowBackground">#EEEEEE</color>
+
+    <color name="dividerColor">#EEEEEE</color>
 </resources>

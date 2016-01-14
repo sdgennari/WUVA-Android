@@ -3,6 +3,7 @@ package com.poofstudios.android.wuvaradio.ui;
 import android.os.Bundle;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -31,9 +32,11 @@ import retrofit.Response;
 import retrofit.Retrofit;
 
 public class RecentlyPlayedFragment extends MediaBaseFragment implements
-        CuePointHistory.CuePointHistoryListener {
+        CuePointHistory.CuePointHistoryListener,
+        SwipeRefreshLayout.OnRefreshListener {
 
     private RecyclerView mRecyclerView;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
     private HistoryAdapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
     private CuePointHistory mCuePointHistory;
@@ -71,8 +74,13 @@ public class RecentlyPlayedFragment extends MediaBaseFragment implements
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_recently_played, container, false);
 
-        mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recycler_view);
+        mSwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swiperefresh_layout);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
+        mSwipeRefreshLayout.setRefreshing(true);
+
+        mRecyclerView = (RecyclerView) rootView.findViewById(R.id.list);
         mRecyclerView.setHasFixedSize(true);
+        mRecyclerView.addItemDecoration(new LineDividerDecoration(getActivity(), getResources()));
 
         mLayoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView.setLayoutManager(mLayoutManager);
@@ -130,6 +138,10 @@ public class RecentlyPlayedFragment extends MediaBaseFragment implements
         mAdapter.setData(mCuePointDescriptionList);
         mAdapter.notifyDataSetChanged();
 
+        // Re-enable the SwipeRefreshLayout
+        mSwipeRefreshLayout.setRefreshing(false);
+        mSwipeRefreshLayout.setEnabled(true);
+
         // Start fetching the cover art image urls
         maybeFetchNextCoverArtImageUrl();
     }
@@ -137,6 +149,10 @@ public class RecentlyPlayedFragment extends MediaBaseFragment implements
     @Override
     public void onCuePointHistoryFailed(CuePointHistory cuePointHistory, int errorCode) {
         // TODO Show error state
+
+        // Re-enable the SwipeRefreshLayout
+        mSwipeRefreshLayout.setRefreshing(false);
+        mSwipeRefreshLayout.setEnabled(true);
     }
 
     /**
@@ -213,5 +229,11 @@ public class RecentlyPlayedFragment extends MediaBaseFragment implements
                 Log.e("WUVA", "Error: " + t.getLocalizedMessage());
             }
         });
+    }
+
+    @Override
+    public void onRefresh() {
+        mCuePointHistory.request();
+        mSwipeRefreshLayout.setEnabled(false);
     }
 }

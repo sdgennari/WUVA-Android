@@ -13,6 +13,8 @@
     <dimen name="item_height">72dp</dimen>
     <dimen name="item_image_size">56dp</dimen>
 
+    <dimen name="divider_height">1dp</dimen>
+
     <dimen name="tab_offset">72dp</dimen>
     <dimen name="tab_max_width">264dp</dimen>
     <dimen name="tab_min_width">72dp</dimen>
