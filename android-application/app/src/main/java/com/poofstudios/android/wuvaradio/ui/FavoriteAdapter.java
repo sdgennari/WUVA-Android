@@ -17,6 +17,7 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 
 public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.ViewHolder> {
@@ -48,11 +49,16 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.ViewHo
 
     public void updateData() {
         // Get the new list of favorites
-        mFavoriteList = new ArrayList<>(mFavoriteManager.getFavorites());
-        sortFavoritesByTrack();
+        HashSet<Favorite> favorites = mFavoriteManager.getFavorites();
 
-        // Notify the adapter that the data has changed
-        notifyDataSetChanged();
+        // Only update the adapter if a favorite was added/removed
+        if (favorites.size() != mFavoriteList.size()) {
+            mFavoriteList = new ArrayList<>(favorites);
+            sortFavoritesByTrack();
+
+            // Notify the adapter that the data has changed
+            notifyDataSetChanged();
+        }
     }
 
     /**

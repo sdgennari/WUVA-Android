@@ -1,7 +1,8 @@
 package com.poofstudios.android.wuvaradio.ui;
 
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import android.support.v4.media.MediaDescriptionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -10,7 +11,7 @@ import android.view.ViewGroup;
 
 import com.poofstudios.android.wuvaradio.R;
 
-public class FavoriteFragment extends Fragment {
+public class FavoriteFragment extends MediaBaseFragment {
 
     private RecyclerView mRecyclerView;
     private FavoriteAdapter mAdapter;
@@ -41,5 +42,16 @@ public class FavoriteFragment extends Fragment {
         mRecyclerView.setAdapter(mAdapter);
 
         return rootView;
+    }
+
+    @Override
+    protected void updatePlaybackState(PlaybackStateCompat playbackState) {
+        // Playback state does not affect recently played
+    }
+
+    @Override
+    protected void updateMediaDescription(MediaDescriptionCompat description) {
+        // Refresh the data in the adapter
+        mAdapter.updateData();
     }
 }
