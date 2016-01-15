@@ -194,7 +194,7 @@ public class RadioPlayerService extends Service implements
 
             @Override
             public void onFailure(Throwable t) {
-                Log.e("WUVA", t.getLocalizedMessage());
+                Log.e("WUVA", "error: " + t.getLocalizedMessage());
             }
         });
     }

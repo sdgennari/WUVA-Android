@@ -4,65 +4,153 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.app.Notification;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.os.Bundle;
+import android.os.IBinder;
+import android.os.RemoteException;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.widget.Toolbar;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AppCompatActivity;
+
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Button;
+import android.widget.ArrayAdapter;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.ToggleButton;
 import android.widget.TextView;
 
 import com.poofstudios.android.wuvaradio.R;
 import com.poofstudios.android.wuvaradio.RadioPlayerService;
+import android.support.v7.widget.Toolbar;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
+import android.widget.Button;
+
+import com.squareup.picasso.Callback;
+import com.squareup.picasso.Picasso;
+import com.poofstudios.android.wuvaradio.utils.BlurTransform;
+import com.squareup.picasso.Target;
 
 public class MainActivity extends MediaBaseActivity {
 
-    Button mStopButton;
-    Button mStartButton;
+    /*Button mStopButton;
+    Button mStartButton;*/
+    ToggleButton mStartStopButton;
+
+    // Nav drawer
+    private String[] mNavItems;
+    private DrawerLayout mDrawerLayout;
+    private ListView mDrawerList;
+    private ActionBarDrawerToggle mDrawerToggle;
+
+    private Toolbar mToolbar;
+
+    LinearLayout mActivityContent;
+    ImageView mCoverArtView;
     TextView mTitleView;
     TextView mArtistView;
-    TextView mCoverArtUrlView;
+
+    String mTitle;
+    String mArtist;
+    String mCoverArtUrl;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar);
+
+        //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        mToolbar.setTitle(mTitle);
+        //mToolbar.getBackground().setAlpha(0);
+        mToolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.darkTextColorPrimary));
+        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                mDrawerLayout.openDrawer(Gravity.LEFT);
             }
         });
 
+        mActivityContent = (LinearLayout) findViewById(R.id.activity_content);
+        mCoverArtView = (ImageView) findViewById(R.id.cover_art);
         mTitleView = (TextView) findViewById(R.id.title);
         mArtistView = (TextView) findViewById(R.id.artist);
-        mCoverArtUrlView = (TextView) findViewById(R.id.cover_art_url);
 
-        mStartButton = (Button) findViewById(R.id.start_button);
-        mStartButton.setOnClickListener(new View.OnClickListener() {
+        // Nav drawer
+        mNavItems = new String[] {"Radio", "Favorites", "Recently Played"};
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerList = (ListView) findViewById(R.id.left_drawer);
+
+        mDrawerList.setAdapter(new ArrayAdapter<String>(this,
+                R.layout.drawer_list_item, mNavItems));
+
+        mDrawerToggle = new ActionBarDrawerToggle(
+                this,
+                mDrawerLayout,
+                mToolbar,
+                R.string.drawer_open,
+                R.string.drawer_close);
+
+        mDrawerToggle.setDrawerIndicatorEnabled(true);
+        mDrawerToggle.syncState();
+
+        // Set the drawer toggle as the DrawerListener
+        mDrawerLayout.setDrawerListener(mDrawerToggle);
+
+        // New start/stop
+        mStartStopButton = (ToggleButton) findViewById(R.id.start_stop_button);
+        mStartStopButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startService();
+                if (mStartStopButton.isChecked()) {
+                    startService();
+                } else {
+                    MediaControllerCompat.TransportControls controls =
+                            getSupportMediaController().getTransportControls();
+                    controls.stop();
+                }
             }
         });
 
-        mStopButton = (Button) findViewById(R.id.stop_button);
-        mStopButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                MediaControllerCompat.TransportControls controls =
-                        getSupportMediaController().getTransportControls();
-                controls.stop();
-            }
-        });
+        // Load placeholder cover art
+        Picasso.with(this).load(R.drawable.cover_art_placeholder).fit().centerInside().into(mCoverArtView);
+        mActivityContent.setBackgroundColor(Color.parseColor("#000000"));
+    }
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState)
+    {
+        super.onPostCreate(savedInstanceState);
+        mDrawerToggle.syncState();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig)
+    {
+        super.onConfigurationChanged(newConfig);
+        mDrawerToggle.onConfigurationChanged(newConfig);
     }
 
     private void startService() {
@@ -74,7 +162,7 @@ public class MainActivity extends MediaBaseActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        //getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
@@ -93,6 +181,42 @@ public class MainActivity extends MediaBaseActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * Updates album cover and text with currently playing song
+     */
+    private void updateUI() {
+        mArtistView.setText(mArtist);
+        mTitleView.setText(mTitle);
+
+        if(mCoverArtUrl != null && !mCoverArtUrl.isEmpty()) {
+            Picasso.with(this).load(mCoverArtUrl).placeholder(R.drawable.cover_art_placeholder).fit().centerInside().into(mCoverArtView);
+
+            Picasso.with(this).load(mCoverArtUrl).transform(new BlurTransform(this)).resize(100,100).centerCrop().into(new Target() {
+                @Override
+                public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                    mActivityContent.setBackground(new BitmapDrawable(getResources(), bitmap));
+                }
+
+                @Override
+                public void onBitmapFailed(final Drawable errorDrawable) {
+                    Log.d("TAG", "FAILED");
+                }
+
+                @Override
+                public void onPrepareLoad(final Drawable placeHolderDrawable) {
+                    Log.d("TAG", "Prepare Load");
+                }
+            });
+
+
+        } else {
+            Picasso.with(this).load(R.drawable.cover_art_placeholder).fit().centerInside().into(mCoverArtView);
+            mActivityContent.setBackgroundColor(Color.parseColor("#000000"));
+        }
+
+        Log.d("url", mCoverArtUrl);
+    }
+
     @Override
     protected void updatePlaybackState(PlaybackStateCompat playbackState) {
         if (playbackState == null) {
@@ -102,17 +226,21 @@ public class MainActivity extends MediaBaseActivity {
         // Update the UI based on the current playback state
         switch(playbackState.getState()) {
             case PlaybackStateCompat.STATE_CONNECTING:
+                mArtistView.setText("Connecting...");
+                mTitleView.setText("");
+                break;
             case PlaybackStateCompat.STATE_PLAYING:
-                mStartButton.setVisibility(View.GONE);
-                mStopButton.setVisibility(View.VISIBLE);
+                updateUI();
                 break;
             case PlaybackStateCompat.STATE_STOPPED:
-                mStartButton.setVisibility(View.VISIBLE);
-                mStopButton.setVisibility(View.GONE);
+                mArtistView.setText("Playback stopped.");
+                mTitleView.setText("");
                 break;
             default:
                 Log.d("WUVA", "Unhandled state " + playbackState.getState());
         }
+
+
         // Can handle other button visibility with playbackState.getActions() or
         // playbackState.getCustomActions()
     }
@@ -123,15 +251,18 @@ public class MainActivity extends MediaBaseActivity {
         if (description == null) {
             return;
         }
-        // Update the views
-        mTitleView.setText(description.getTitle());
-        mArtistView.setText(description.getSubtitle());
+
+        // Update the variables
+        mTitle = description.getTitle().toString();
+        mArtist = description.getSubtitle().toString();
 
         if (description.getIconUri() != null) {
-            mCoverArtUrlView.setText(description.getIconUri().toString());
+            mCoverArtUrl = description.getIconUri().toString();
         } else {
             // Request is still pending, so no MediaUri set
-            mCoverArtUrlView.setText("Pending...");
+            mCoverArtUrl = "";
         }
+
+        updateUI();
     }
 }

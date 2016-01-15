@@ -1,19 +1,40 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme.Base" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppTheme.Base" parent="Theme.AppCompat">
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
         <item name="windowNoTitle">true</item>
         <item name="windowActionBar">false</item>
+        <item name="drawerArrowStyle">@style/DrawerIcon</item>
+        <item name="android:popupMenuStyle">@style/PopupMenu</item>
+        <item name="android:windowContentOverlay">@null</item>
     </style>
 
-    <style name="AppTheme" parent="AppTheme.Base" />
+    <style name="AppTheme.Dark" parent="AppTheme.Base">
+        <item name="colorPrimary">@color/darkColorPrimary</item>
+        <item name="colorPrimaryDark">@color/darkColorPrimaryDark</item>
+        <item name="colorAccent">@color/darkColorAccent</item>
+        <item name="android:textColorPrimary">@color/darkTextColorPrimary</item>
+    </style>
+
+    <style name="AppTheme.Light" parent="AppTheme.Base">
+        <item name="colorPrimary">@color/lightColorPrimary</item>
+        <item name="colorPrimaryDark">@color/lightColorPrimaryDark</item>
+        <item name="colorAccent">@color/lightColorAccent</item>
+        <item name="android:textColorPrimary">@color/lightTextColorPrimary</item>
+    </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="DrawerIcon" parent="Widget.AppCompat.DrawerArrowToggle">
+        <item name="color">@color/darkTextColorPrimary</item>
+    </style>
+
+    <style name="PopupMenu" parent="android:Widget.Holo.Light.ListPopupWindow">
+        <item name="android:popupBackground">@color/darkColorAccent</item>
+        <item name="android:actionMenuTextColor">@color/darkColorAccent</item>
+    </style>
 
 </resources>
