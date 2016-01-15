@@ -59,4 +59,12 @@ public class FavoriteManager {
     public boolean isFavorite(Favorite favorite) {
         return mFavorites.contains(favorite);
     }
+
+    /**
+     * Returns a set containing the user's favorite songs
+     * @return set containing all favorite songs
+     */
+    public HashSet<Favorite> getFavorites() {
+        return mFavorites;
+    }
 }
