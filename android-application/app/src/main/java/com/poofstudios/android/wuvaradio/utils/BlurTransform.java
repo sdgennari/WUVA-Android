@@ -52,7 +52,7 @@ public class BlurTransform implements Transformation {
 
         // Darken image
         Paint paint = new Paint();
-        ColorFilter filter = new LightingColorFilter(0xff444444, 0x00000000);
+        ColorFilter filter = new LightingColorFilter(0xffaaaaaa, 0x00000000);
         paint.setColorFilter(filter);
         Canvas canvas = new Canvas(blurredBitmap);
         canvas.drawBitmap(blurredBitmap, 0, 0, paint);
