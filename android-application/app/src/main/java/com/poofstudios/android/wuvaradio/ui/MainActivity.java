@@ -213,7 +213,7 @@ public class MainActivity extends MediaBaseActivity {
         if (mPlaybackControlsFragment != null) {
             getSupportFragmentManager().beginTransaction()
                     .hide(mPlaybackControlsFragment)
-                    .commit();
+                    .commitAllowingStateLoss();
         }
     }
 
@@ -221,7 +221,7 @@ public class MainActivity extends MediaBaseActivity {
         if (mPlaybackControlsFragment != null) {
             getSupportFragmentManager().beginTransaction()
                     .show(mPlaybackControlsFragment)
-                    .commit();
+                    .commitAllowingStateLoss();
         }
     }
 }
