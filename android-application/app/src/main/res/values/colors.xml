@@ -5,6 +5,7 @@
     <color name="darkColorPrimaryDark">#000000</color>
     <color name="darkColorAccent">#6f6f6f</color>
     <color name="darkTextColorPrimary">#FFFFFF</color>
+    <color name="darkTextColorSecondary">#b2b2b2</color>
 
     <!-- Light Theme Colors -->
     <color name="lightColorPrimary">#B1851D</color>
@@ -15,5 +16,7 @@
     <!-- Shared Colors -->
     <color name="dividerColor">#EEEEEE</color>
     <color name="windowBackground">#EEEEEE</color>
+
+    <color name="notificationBackground">#222222</color>
 
 </resources>

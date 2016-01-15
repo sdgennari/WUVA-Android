@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/notification_big_height"
+    android:background="@color/notificationBackground">
+
+    <ImageView
+        android:id="@+id/image"
+        android:layout_width="@dimen/notification_big_image_size"
+        android:layout_height="@dimen/notification_big_image_size"
+        android:scaleType="centerCrop"
+        tools:src="@drawable/cover_art_placeholder" />
+
+    <LinearLayout
+        android:id="@+id/button_container"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/notification_action_size"
+        android:orientation="horizontal"
+        android:layout_toEndOf="@id/image"
+        android:layout_alignParentBottom="true">
+
+        <ImageView
+            android:id="@+id/action_play_stop"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="@dimen/notification_action_size"
+            android:src="@drawable/ic_play_arrow_white_24dp"
+            android:scaleType="center" />
+
+        <ImageView
+            android:id="@+id/action_favorite"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="@dimen/notification_action_size"
+            android:src="@drawable/ic_star_border_white_24dp"
+            android:scaleType="center" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/notification_title_container_height"
+        android:layout_marginStart="@dimen/padding_default"
+        android:layout_toEndOf="@id/image"
+        android:gravity="center_vertical"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/darkTextColorPrimary"
+            android:textSize="@dimen/text_notification_title"
+            android:textStyle="bold"
+            android:maxLines="1"
+            android:ellipsize="end"
+            tools:text="Song title here" />
+
+        <TextView
+            android:id="@+id/subtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/darkTextColorSecondary"
+            android:textSize="@dimen/text_notification_subtitle"
+            android:maxLines="1"
+            android:ellipsize="end"
+            tools:text="Song artist here" />
+
+    </LinearLayout>
+
+</RelativeLayout>

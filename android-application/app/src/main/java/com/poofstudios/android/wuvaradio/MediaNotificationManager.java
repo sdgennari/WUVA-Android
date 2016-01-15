@@ -19,6 +19,7 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
+import android.widget.RemoteViews;
 
 import com.poofstudios.android.wuvaradio.ui.MainActivity;
 import com.squareup.picasso.Picasso;
@@ -154,12 +155,12 @@ public class MediaNotificationManager extends BroadcastReceiver {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(mService);
 
         // Add play/stop action
-        addPlayStopButton(builder);
+//        addPlayStopButton(builder);
 
         // Add favorite button
-        if (mPlaybackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
-            addFavoriteButton(builder);
-        }
+//        if (mPlaybackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
+//            addFavoriteButton(builder);
+//        }
 
         // Get description from metadata
         MediaDescriptionCompat description = mMediaMetadata.getDescription();
@@ -167,24 +168,42 @@ public class MediaNotificationManager extends BroadcastReceiver {
         // Get placeholder bitmap
         Bitmap placeholderBmp = BitmapFactory.decodeResource(mService.getResources(), R.drawable.cover_art_placeholder);
 
+        // Regular remote view
+        RemoteViews contentView = new RemoteViews(mService.getPackageName(),
+                R.layout.notification_view);
+        contentView.setImageViewResource(R.id.image, R.drawable.cover_art_placeholder);
+        contentView.setTextViewText(R.id.title, description.getTitle());
+        contentView.setTextViewText(R.id.subtitle, description.getSubtitle());
+
+        // Big remote view
+        RemoteViews expandedView = new RemoteViews(mService.getPackageName(),
+                R.layout.notification_big_view);
+        expandedView.setImageViewResource(R.id.image, R.drawable.cover_art_placeholder);
+        expandedView.setTextViewText(R.id.title, description.getTitle());
+        expandedView.setTextViewText(R.id.subtitle, description.getSubtitle());
+
         // Add data to notification
         builder.setSmallIcon(R.drawable.ic_notification)
-                .setContentTitle(description.getTitle())
-                .setContentText(description.getSubtitle())
-                .setLargeIcon(placeholderBmp)           // Always set this to overwrite old image
-                .setStyle(new NotificationCompat.MediaStyle()
-                        .setMediaSession(mSessionToken))
+//                .setContentTitle(description.getTitle())
+//                .setContentText(description.getSubtitle())
+//                .setLargeIcon(placeholderBmp)           // Always set this to overwrite old image
+//                .setStyle(new NotificationCompat.MediaStyle()
+//                        .setMediaSession(mSessionToken))
                 .setContentIntent(createContentIntent(description));
 
         // Allow the notification to be dismissed based on state
-        setNotificationPlaybackState(builder);
+//        setNotificationPlaybackState(builder);
 
         // Load the image async with Picasso
-        if (description.getIconUri() != null) {
-            loadCoverArtImage(builder, description.getIconUri().toString());
-        }
+//        if (description.getIconUri() != null) {
+//            loadCoverArtImage(builder, description.getIconUri().toString());
+//        }
 
-        return builder.build();
+        Notification notification = builder.build();
+        notification.contentView = contentView;
+        notification.bigContentView = expandedView;
+
+        return notification;
     }
 
     /**
