@@ -94,14 +94,13 @@
 
             <ToggleButton
                 android:id="@+id/start_stop_button"
-                android:background="@null"
+                android:background="@drawable/circle"
                 android:button="@drawable/toggle_selector"
                 android:textOff=""
                 android:textOn=""
-                android:layout_width="24dp"
+                android:layout_width="48dp"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical|end"/>
-
+                android:gravity="center"/>
 
             <Space
                 android:layout_width="0dp"
