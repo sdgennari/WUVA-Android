@@ -1,9 +1,15 @@
 package com.poofstudios.android.wuvaradio;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.poofstudios.android.wuvaradio.model.Favorite;
 
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashSet;
 
 /**
@@ -11,13 +17,12 @@ import java.util.HashSet;
  */
 public class FavoriteManager {
 
-    // Instance of context to use with shared prefs
-    private static Context mContext;
+        // Set of current user favorites
+        private static HashSet<Favorite> mFavorites;
 
-    // Set of current user favorites
-    private static HashSet<Favorite> mFavorites;
+        private static SharedPreferences mPrefs;
 
-    static FavoriteManager mFavoriteManager;
+        static FavoriteManager mFavoriteManager;
 
     public static FavoriteManager getFavoriteManager(Context context) {
         if (mFavoriteManager == null) {
@@ -28,13 +33,30 @@ public class FavoriteManager {
 
     // Use a private constructor other classes cannot call it
     private FavoriteManager(Context context) {
-        mContext = context;
-
-        // Setup the HashMap
-        mFavorites = new HashSet<>();
 
         // Load data from shared preferences
-        // TODO Load favorites from local storage
+        mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+        restoreFavorites();
+
+        if (mFavorites == null) {
+            mFavorites = new HashSet<>();
+        }
+    }
+
+    public void saveFavorites() {
+        SharedPreferences.Editor prefsEditor = mPrefs.edit();
+        Gson gson = new Gson();
+        String json = gson.toJson(mFavorites);
+        prefsEditor.putString("favorites", json);
+        prefsEditor.apply();
+    }
+
+    public void restoreFavorites() {
+        Gson gson = new Gson();
+        String json = mPrefs.getString("favorites", "");
+        Type type = new TypeToken<HashSet<Favorite>>(){}.getType();
+        mFavorites = gson.fromJson(json, type);
     }
 
     /**
@@ -48,7 +70,7 @@ public class FavoriteManager {
         } else {
             mFavorites.remove(favorite);
         }
-        // TODO Update local storage
+        saveFavorites();
     }
 
     /**
