@@ -168,7 +168,7 @@ public class MediaNotificationManager extends BroadcastReceiver {
         Bitmap placeholderBmp = BitmapFactory.decodeResource(mService.getResources(), R.drawable.cover_art_placeholder);
 
         // Add data to notification
-        builder.setSmallIcon(R.mipmap.ic_launcher)
+        builder.setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(description.getTitle())
                 .setContentText(description.getSubtitle())
                 .setLargeIcon(placeholderBmp)           // Always set this to overwrite old image
