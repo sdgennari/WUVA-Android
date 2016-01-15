@@ -10,6 +10,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
+import android.widget.ToggleButton;
 
 import com.poofstudios.android.wuvaradio.R;
 import com.poofstudios.android.wuvaradio.RadioPlayback;
@@ -85,7 +87,7 @@ public class RecentlyPlayedFragment extends MediaBaseFragment implements
         mLayoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView.setLayoutManager(mLayoutManager);
 
-        mAdapter = new HistoryAdapter();
+        mAdapter = new HistoryAdapter(getActivity());
         mRecyclerView.setAdapter(mAdapter);
 
         return rootView;

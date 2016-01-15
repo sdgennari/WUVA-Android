@@ -235,14 +235,14 @@ public class MediaNotificationManager extends BroadcastReceiver {
      * @param builder builder for the notification
      */
     private void addFavoriteButton(NotificationCompat.Builder builder) {
-        int icon = R.drawable.ic_star_border;
+        int icon = R.drawable.ic_star_border_white_24dp;
 
         // If the song is already a favorite, change icon
         MediaMetadataCompat metadata = mMediaController.getMetadata();
         if (metadata !=  null) {
             RatingCompat rating = metadata.getRating(MediaMetadataCompat.METADATA_KEY_USER_RATING);
             if (rating != null && rating.hasHeart()) {
-                icon = R.drawable.ic_star;
+                icon = R.drawable.ic_star_white_24dp;
             }
         }
         builder.addAction(icon, mService.getString(R.string.action_favorite), mFavoriteIntent);
