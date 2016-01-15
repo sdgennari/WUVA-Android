@@ -3,7 +3,6 @@ package com.poofstudios.android.wuvaradio.ui;
 import android.os.Bundle;
 import android.content.res.Configuration;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.session.MediaControllerCompat;
@@ -14,8 +13,8 @@ import android.support.v7.app.ActionBarDrawerToggle;
 
 import android.view.Gravity;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.FrameLayout;
 import android.widget.ListView;
 
 import com.poofstudios.android.wuvaradio.R;
@@ -24,11 +23,17 @@ public class MainActivity extends MediaBaseActivity {
 
     private PlaybackControlsFragment mPlaybackControlsFragment;
 
+    // Nav drawer item titles
+    private static final String NAV_RADIO = "Radio";
+    private static final String NAV_FAVORITES = "Favorites";
+    private static final String NAV_RECENTLY_PLAYED = "Recently Played";
+
     // Nav drawer
     private String[] mNavItems;
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerList;
     private ActionBarDrawerToggle mDrawerToggle;
+    private String mSelectedItem;
 
     private Toolbar mToolbar;
 
@@ -53,9 +58,15 @@ public class MainActivity extends MediaBaseActivity {
         });
 
         // Nav drawer
-        mNavItems = new String[] {"Radio", "Favorites", "Recently Played"};
+        mNavItems = new String[] {NAV_RADIO, NAV_FAVORITES, NAV_RECENTLY_PLAYED};
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
+        mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                selectNavItem(position);
+            }
+        });
 
         mDrawerList.setAdapter(new ArrayAdapter<>(this,
                 R.layout.drawer_list_item, mNavItems));
@@ -74,14 +85,52 @@ public class MainActivity extends MediaBaseActivity {
         mDrawerLayout.setDrawerListener(mDrawerToggle);
 
         // Set the radio fragment as the primary fragment
-        Fragment radioFragment = new RadioFragment();
-        getSupportFragmentManager().beginTransaction()
-                .add(R.id.fragment_container, radioFragment)
-                .commit();
+        selectNavItem(0);
 
         // Get the playback control fragment from the ui
         mPlaybackControlsFragment = (PlaybackControlsFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.fragment_playback_controls);
+    }
+
+    private void selectNavItem(int position) {
+        String navItem = mNavItems[position];
+        mSelectedItem = navItem;
+
+        // Create a new fragment based on selection
+        Fragment fragment;
+        switch (navItem) {
+            case NAV_FAVORITES:
+                fragment = new FavoriteFragment();
+                break;
+            case NAV_RECENTLY_PLAYED:
+                fragment = new RecentlyPlayedFragment();
+                break;
+            case NAV_RADIO:
+            default:
+                fragment = new RadioFragment();
+        }
+
+        // Replace the current fragment
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
+
+        // Show control fragment if necessary
+        if (shouldShowPlaybackControls()) {
+            showPlaybackControls();
+        } else {
+            hidePlaybackControls();
+        }
+
+        // Highlight the item in nav drawer
+        mDrawerList.setItemChecked(position, true);
+
+        // Update the toolbar
+        setTitle(navItem);
+
+        // Close the nav drawer
+        mDrawerLayout.closeDrawer(mDrawerList);
+
     }
 
     @Override
@@ -103,10 +152,12 @@ public class MainActivity extends MediaBaseActivity {
     protected void onSessionConnected() {
         super.onSessionConnected();
 
+        // Notify the controller fragment that a session has started
         if (mPlaybackControlsFragment != null) {
             mPlaybackControlsFragment.onControllerConnected();
         }
 
+        // Notify the current fragment that the session has been connected
         Fragment currentFragment = getSupportFragmentManager()
                 .findFragmentById(R.id.fragment_container);
         if (currentFragment instanceof MediaBaseFragment) {
@@ -140,6 +191,11 @@ public class MainActivity extends MediaBaseActivity {
         // Check for valid data
         if (controller == null || controller.getPlaybackState() == null ||
                 controller.getMetadata() == null) {
+            return false;
+        }
+
+        // Do not show controls on the radio screen
+        if (mSelectedItem.equals(NAV_RADIO)) {
             return false;
         }
 

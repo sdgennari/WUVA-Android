@@ -81,7 +81,7 @@ public class RadioFragment extends MediaBaseFragment {
         mTitleView.setText(mTitle);
 
         Context context = getActivity();
-        if(mCoverArtUrl != null && !mCoverArtUrl.isEmpty()) {
+        if(context != null && mCoverArtUrl != null && !mCoverArtUrl.isEmpty()) {
             Picasso.with(context).load(mCoverArtUrl).placeholder(R.drawable.cover_art_placeholder).fit().centerInside().into(mCoverArtView);
 
             Picasso.with(context).load(mCoverArtUrl).transform(new BlurTransform(context)).resize(100,100).centerCrop().into(new Target() {
@@ -107,7 +107,7 @@ public class RadioFragment extends MediaBaseFragment {
             mFragmentContent.setBackgroundColor(Color.parseColor("#000000"));
         }
 
-        Log.d("url", mCoverArtUrl);
+        Log.d("url", "Cover art: " + mCoverArtUrl);
     }
 
 
@@ -130,13 +130,16 @@ public class RadioFragment extends MediaBaseFragment {
             case PlaybackStateCompat.STATE_CONNECTING:
                 mArtistView.setText("Connecting...");
                 mTitleView.setText("");
+                mStartStopButton.setChecked(true);
                 break;
             case PlaybackStateCompat.STATE_PLAYING:
                 updateUI();
+                mStartStopButton.setChecked(true);
                 break;
             case PlaybackStateCompat.STATE_STOPPED:
                 mArtistView.setText("Playback stopped.");
                 mTitleView.setText("");
+                mStartStopButton.setChecked(false);
                 break;
             default:
                 Log.d("WUVA", "Unhandled state " + playbackState.getState());
