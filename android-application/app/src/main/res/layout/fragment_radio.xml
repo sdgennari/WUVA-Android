@@ -22,7 +22,6 @@
         android:paddingLeft="@dimen/activity_horizontal_margin"
         android:paddingRight="@dimen/activity_horizontal_margin"
         android:paddingTop="@dimen/activity_vertical_margin"
-        android:gravity="center_horizontal|bottom"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:context=".ui.MainActivity"
         android:weightSum="100">
@@ -39,9 +38,9 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="60"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
-            android:src="@drawable/cover_art_placeholder" />
+            android:layout_gravity="center_horizontal"
+            android:src="@drawable/cover_art_placeholder"
+            android:contentDescription="@string/cover_art_alt_text"/>
 
         <!-- Spacing -->
         <Space
@@ -54,6 +53,7 @@
             android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
             android:textColor="@color/darkTextColorPrimary"
             android:layout_weight="3"/>
 
@@ -61,6 +61,7 @@
             android:id="@+id/artist"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
             android:textColor="@color/darkTextColorPrimary"
             android:layout_weight="2" />
 
@@ -72,12 +73,24 @@
         <!-- Spacing -->
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="18"
-            android:orientation="vertical">
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:weightSum="100">
 
-            <!-- Volume button here -->
+            <!-- Pause/play toggle -->
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="50"/>
+
+            <Space
+                android:layout_width="24dp"
+                android:layout_height="0dp"
+                android:layout_weight="0"/>
 
             <ToggleButton
                 android:id="@+id/start_stop_button"
@@ -85,12 +98,29 @@
                 android:button="@drawable/toggle_selector"
                 android:textOff=""
                 android:textOn=""
-                android:layout_width="20dp"
-                android:layout_height="wrap_content"/>
+                android:layout_width="24dp"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical|end"/>
 
-            <!-- Favorite button here -->
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="25"/>
+
+            <ToggleButton
+                android:id="@+id/toggle_favorite"
+                android:background="@null"
+                android:button="@drawable/favorite_toggle_light"
+                android:textOff=""
+                android:textOn=""
+                android:layout_width="24dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0"/>
+
 
         </LinearLayout>
+
 
     </LinearLayout>
 
