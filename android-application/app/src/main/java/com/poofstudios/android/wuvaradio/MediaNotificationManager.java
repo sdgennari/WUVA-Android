@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.os.RemoteException;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
@@ -20,6 +21,8 @@ import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
 import com.poofstudios.android.wuvaradio.ui.MainActivity;
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 public class MediaNotificationManager extends BroadcastReceiver {
 
@@ -43,6 +46,8 @@ public class MediaNotificationManager extends BroadcastReceiver {
     private MediaControllerCompat.TransportControls mTransportControls;
     private PlaybackStateCompat mPlaybackState;
     private MediaMetadataCompat mMediaMetadata;
+
+    private Target mTarget;
 
     private final NotificationManager mNotificationManager;
 
@@ -166,7 +171,7 @@ public class MediaNotificationManager extends BroadcastReceiver {
         builder.setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(description.getTitle())
                 .setContentText(description.getSubtitle())
-                .setLargeIcon(placeholderBmp)
+                .setLargeIcon(placeholderBmp)           // Always set this to overwrite old image
                 .setStyle(new NotificationCompat.MediaStyle()
                         .setMediaSession(mSessionToken))
                 .setContentIntent(createContentIntent(description));
@@ -174,7 +179,10 @@ public class MediaNotificationManager extends BroadcastReceiver {
         // Allow the notification to be dismissed based on state
         setNotificationPlaybackState(builder);
 
-        // TODO Handle cover art with Picasso
+        // Load the image async with Picasso
+        if (description.getIconUri() != null) {
+            loadCoverArtImage(builder, description.getIconUri().toString());
+        }
 
         return builder.build();
     }
@@ -246,6 +254,28 @@ public class MediaNotificationManager extends BroadcastReceiver {
             }
         }
         builder.addAction(icon, mService.getString(R.string.action_favorite), mFavoriteIntent);
+    }
+
+    private void loadCoverArtImage(final NotificationCompat.Builder builder, String coverArtUrl) {
+        // Must keep a strong reference to the target to avoid garbage collection
+        mTarget = new Target() {
+            @Override
+            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                // Add the image to the notification and update it
+                builder.setLargeIcon(bitmap);
+                mNotificationManager.notify(NOTIFICATION_ID, builder.build());
+            }
+
+            @Override
+            public void onBitmapFailed(Drawable errorDrawable) {
+                Log.d("====", "failed");
+            }
+
+            @Override
+            public void onPrepareLoad(Drawable placeHolderDrawable) {
+            }
+        };
+        Picasso.with(mService).load(coverArtUrl).into(mTarget);
     }
 
     // Extend BroadcastReceiver to handle notification actions
