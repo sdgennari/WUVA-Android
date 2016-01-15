@@ -82,32 +82,10 @@ public class RadioFragment extends MediaBaseFragment {
         mArtistView.setText(mArtist);
         mTitleView.setText(mTitle);
 
-        mCoverArtUrl = "http://ia801807.us.archive.org/34/items/mbid-b451722c-86ba-4ecf-ae60-145ed7649644/mbid-b451722c-86ba-4ecf-ae60-145ed7649644-4445114555_thumb500.jpg";
-
         Context context = getActivity();
         if(context != null && mCoverArtUrl != null && !mCoverArtUrl.isEmpty()) {
             Picasso.with(context).load(mCoverArtUrl).placeholder(R.drawable.cover_art_placeholder).fit().centerInside().into(mCoverArtView);
             Picasso.with(context).load(mCoverArtUrl).transform(new BlurTransform(context)).into(mBackgroundImage);
-            /*
-            Picasso.with(context).load(mCoverArtUrl).transform(new BlurTransform(context)).resize(100,100).centerCrop().into(new Target() {
-                @Override
-                public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                    mFragmentContent.setBackground(new BitmapDrawable(getResources(), bitmap));
-                }
-
-                @Override
-                public void onBitmapFailed(final Drawable errorDrawable) {
-                    Log.d("TAG", "FAILED");
-                }
-
-                @Override
-                public void onPrepareLoad(final Drawable placeHolderDrawable) {
-                    Log.d("TAG", "Prepare Load");
-                }
-            });
-            */
-
-
         } else {
             Picasso.with(context).load(R.drawable.cover_art_placeholder).fit().centerInside().into(mCoverArtView);
             mBackgroundImage.setImageResource(R.color.darkColorPrimaryDark);

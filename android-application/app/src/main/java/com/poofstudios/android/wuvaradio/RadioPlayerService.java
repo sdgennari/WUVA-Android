@@ -382,6 +382,11 @@ public class RadioPlayerService extends Service implements
 
                     // Create a favorite object from the current song
                     Track track = new Track(description.getTitle(), description.getSubtitle());
+
+                    if (description.getIconUri() != null) {
+                        track.setCoverArtUrl(description.getIconUri().toString());
+                    }
+
                     Favorite favorite = new Favorite(track);
 
                     // If not already a favorite, then added to favorites

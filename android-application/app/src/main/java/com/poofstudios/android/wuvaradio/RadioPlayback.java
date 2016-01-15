@@ -123,7 +123,7 @@ public class RadioPlayback implements MediaPlayer.OnCuePointReceivedListener,
                 String artist = StringUtils.capitalizeEveryWord(cuePoint.getString(TRACK_ARTIST_NAME));
 
                 // Check for valid and non-repeated metadata
-                if (title != null && artist != null && !title.equals(mLastTitle) && !artist.equals(mLastArtist)) {
+                if (title != null && artist != null && (!title.equals(mLastTitle) || !artist.equals(mLastArtist))) {
                     // Update last title and artist
                     mLastTitle = title;
                     mLastArtist = artist;

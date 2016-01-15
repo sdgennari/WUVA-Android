@@ -8,7 +8,7 @@
     android:paddingTop="@dimen/padding_half"
     android:paddingBottom="@dimen/padding_half"
     android:background="@android:color/white"
-    tools:context=".ui.MainActivity">
+    tools:contexnt=".ui.MainActivity">
 
     <ImageView
         android:id="@+id/image"
@@ -20,17 +20,6 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
 
-    <ToggleButton
-        android:id="@+id/toggle_favorite"
-        android:layout_width="@dimen/favorite_button_size"
-        android:layout_height="@dimen/favorite_button_size"
-        android:textOn=""
-        android:textOff=""
-        android:background="@drawable/favorite_toggle"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_centerVertical="true" />
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -39,9 +28,7 @@
         android:layout_marginStart="@dimen/padding_default"
         android:layout_centerVertical="true"
         android:layout_toRightOf="@id/image"
-        android:layout_toEndOf="@id/image"
-        android:layout_toLeftOf="@id/toggle_favorite"
-        android:layout_toStartOf="@id/toggle_favorite">
+        android:layout_toEndOf="@id/image">
 
         <TextView
             android:id="@+id/title"
