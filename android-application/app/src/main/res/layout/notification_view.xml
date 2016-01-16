@@ -12,6 +12,7 @@
         android:layout_width="@dimen/notification_image_size"
         android:layout_height="@dimen/notification_image_size"
         android:scaleType="centerCrop"
+        android:background="@color/lightColorPrimary"
         tools:src="@drawable/cover_art_placeholder" />
 
     <LinearLayout

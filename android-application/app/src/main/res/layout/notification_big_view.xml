@@ -9,6 +9,7 @@
         android:id="@+id/image"
         android:layout_width="@dimen/notification_big_image_size"
         android:layout_height="@dimen/notification_big_image_size"
+        android:background="@color/lightColorPrimary"
         android:scaleType="centerCrop"
         tools:src="@drawable/cover_art_placeholder" />
 
@@ -27,6 +28,13 @@
             android:layout_height="@dimen/notification_action_size"
             android:src="@drawable/ic_play_arrow_white_24dp"
             android:scaleType="center" />
+
+        <ImageView
+            android:layout_width="@dimen/notification_divider_size"
+            android:layout_height="match_parent"
+            android:paddingTop="@dimen/padding_half"
+            android:paddingBottom="@dimen/padding_half"
+            android:src="@color/darkColorAccent"/>
 
         <ImageView
             android:id="@+id/action_favorite"
@@ -49,6 +57,7 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/info_container"
         android:layout_width="match_parent"
         android:layout_height="@dimen/notification_title_container_height"
         android:layout_marginStart="@dimen/padding_default"
@@ -78,5 +87,16 @@
             tools:text="Song artist here" />
 
     </LinearLayout>
+
+    <!-- Divider Line -->
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/notification_divider_size"
+        android:layout_below="@id/info_container"
+        android:paddingLeft="@dimen/padding_half"
+        android:paddingRight="@dimen/padding_half"
+        android:layout_toRightOf="@id/image"
+        android:layout_toEndOf="@id/image"
+        android:src="@color/darkColorAccent"/>
 
 </RelativeLayout>
