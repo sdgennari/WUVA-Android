@@ -355,6 +355,15 @@ public class RadioPlayerService extends Service implements
         }
 
         /**
+         * Stops playback but does not release the player. Pause should be used to temporarily stop
+         * playback if it is likely to be resumed
+         */
+        @Override
+        public void onPause() {
+            mPlayback.stop();
+        }
+
+        /**
          * Stops playback and stops the service
          */
         @Override

@@ -19,6 +19,7 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
+import android.view.View;
 import android.widget.RemoteViews;
 
 import com.poofstudios.android.wuvaradio.ui.MainActivity;
@@ -35,11 +36,13 @@ public class MediaNotificationManager extends BroadcastReceiver {
     public static final String ACTION_PLAY = "com.poofstudios.android.wuvaradio.play";
     public static final String ACTION_STOP = "com.poofstudios.android.wuvaradio.stop";
     public static final String ACTION_FAVORITE = "com.poofstudios.android.wuvaradio.favorite";
+    public static final String ACTION_DISMISS = "com.poofstudios.android.wuvaradio.dismiss";
 
     // Intents
     private final PendingIntent mPlayIntent;
     private final PendingIntent mStopIntent;
     private final PendingIntent mFavoriteIntent;
+    private final PendingIntent mDismissIntent;
 
     private final RadioPlayerService mService;
     private MediaSessionCompat.Token mSessionToken;
@@ -72,6 +75,8 @@ public class MediaNotificationManager extends BroadcastReceiver {
                 new Intent(ACTION_STOP).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
         mFavoriteIntent = PendingIntent.getBroadcast(mService, REQUEST_CODE,
                 new Intent(ACTION_FAVORITE).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+        mDismissIntent = PendingIntent.getBroadcast(mService, REQUEST_CODE,
+                new Intent(ACTION_DISMISS).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
 
         // Cancel all notifications
         // Handles case where system killed and restarted RadioPlayerService
@@ -95,6 +100,7 @@ public class MediaNotificationManager extends BroadcastReceiver {
                 filter.addAction(ACTION_PLAY);
                 filter.addAction(ACTION_STOP);
                 filter.addAction(ACTION_FAVORITE);
+                filter.addAction(ACTION_DISMISS);
                 mService.registerReceiver(this, filter);
 
                 // Move the service to the foreground
@@ -151,22 +157,8 @@ public class MediaNotificationManager extends BroadcastReceiver {
         if (mMediaMetadata == null || mPlaybackState == null) {
             return null;
         }
-
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(mService);
-
-        // Add play/stop action
-//        addPlayStopButton(builder);
-
-        // Add favorite button
-//        if (mPlaybackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
-//            addFavoriteButton(builder);
-//        }
-
         // Get description from metadata
         MediaDescriptionCompat description = mMediaMetadata.getDescription();
-
-        // Get placeholder bitmap
-        Bitmap placeholderBmp = BitmapFactory.decodeResource(mService.getResources(), R.drawable.cover_art_placeholder);
 
         // Regular remote view
         RemoteViews contentView = new RemoteViews(mService.getPackageName(),
@@ -182,23 +174,40 @@ public class MediaNotificationManager extends BroadcastReceiver {
         expandedView.setTextViewText(R.id.title, description.getTitle());
         expandedView.setTextViewText(R.id.subtitle, description.getSubtitle());
 
-        // Add data to notification
+        // Configure play/stop action
+        configurePlayStopButton(contentView);
+        configurePlayStopButton(expandedView);
+
+        // Configure favorite action
+        configureFavoriteButton(contentView);
+        configureFavoriteButton(expandedView);
+
+        // Show/hide the favorite button based on playback state
+        if (mPlaybackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
+            contentView.setViewVisibility(R.id.action_favorite, View.VISIBLE);
+            expandedView.setViewVisibility(R.id.action_favorite, View.VISIBLE);
+            expandedView.setViewVisibility(R.id.action_favorite_disabled, View.GONE);
+        } else {
+            contentView.setViewVisibility(R.id.action_favorite, View.GONE);
+            expandedView.setViewVisibility(R.id.action_favorite, View.GONE);
+            expandedView.setViewVisibility(R.id.action_favorite_disabled, View.VISIBLE);
+        }
+
+        // Add data to notification builder
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(mService);
         builder.setSmallIcon(R.drawable.ic_notification)
-//                .setContentTitle(description.getTitle())
-//                .setContentText(description.getSubtitle())
-//                .setLargeIcon(placeholderBmp)           // Always set this to overwrite old image
-//                .setStyle(new NotificationCompat.MediaStyle()
-//                        .setMediaSession(mSessionToken))
                 .setContentIntent(createContentIntent(description));
 
         // Allow the notification to be dismissed based on state
-//        setNotificationPlaybackState(builder);
+        setNotificationPlaybackState(builder);
 
         // Load the image async with Picasso
-//        if (description.getIconUri() != null) {
-//            loadCoverArtImage(builder, description.getIconUri().toString());
-//        }
+        if (description.getIconUri() != null) {
+            loadCoverArtImage(builder, contentView, expandedView,
+                    description.getIconUri().toString());
+        }
 
+        // Set the custom content views for the notification
         Notification notification = builder.build();
         notification.contentView = contentView;
         notification.bigContentView = expandedView;
@@ -228,7 +237,7 @@ public class MediaNotificationManager extends BroadcastReceiver {
      * @param builder builder for the notification
      */
     private void setNotificationPlaybackState(NotificationCompat.Builder builder) {
-        if (mPlaybackState == null || !mStarted) {
+        if (mPlaybackState == null || !mStarted || mPlaybackState.getState() == PlaybackStateCompat.STATE_STOPPED) {
             // Playback is not going, so remove the notification
             mService.stopForeground(true);
         } else {
@@ -237,31 +246,22 @@ public class MediaNotificationManager extends BroadcastReceiver {
         }
     }
 
-    /**
-     * Adds either a play or a stop button depending on playback state
-     * @param builder builder for the notification
-     */
-    private void addPlayStopButton(NotificationCompat.Builder builder) {
-        String label;
+
+    private void configurePlayStopButton(RemoteViews remoteView) {
         int icon;
         PendingIntent pendingIntent;
         if (mPlaybackState.getState() == PlaybackStateCompat.STATE_STOPPED) {
-            label = mService.getString(R.string.action_play);
             icon = R.drawable.ic_play_arrow_white_24dp;
             pendingIntent = mPlayIntent;
         } else {
-            label = mService.getString(R.string.action_stop);
             icon = R.drawable.ic_stop_white_24dp;
             pendingIntent = mStopIntent;
         }
-        builder.addAction(icon, label, pendingIntent);
+        remoteView.setImageViewResource(R.id.action_play_stop, icon);
+        remoteView.setOnClickPendingIntent(R.id.action_play_stop, pendingIntent);
     }
 
-    /**
-     * Adds a favorite button and changes icon if the song is already marked as favorite
-     * @param builder builder for the notification
-     */
-    private void addFavoriteButton(NotificationCompat.Builder builder) {
+    private void configureFavoriteButton(RemoteViews remoteView) {
         int icon = R.drawable.ic_star_border_white_24dp;
 
         // If the song is already a favorite, change icon
@@ -272,17 +272,27 @@ public class MediaNotificationManager extends BroadcastReceiver {
                 icon = R.drawable.ic_star_white_24dp;
             }
         }
-        builder.addAction(icon, mService.getString(R.string.action_favorite), mFavoriteIntent);
+        remoteView.setImageViewResource(R.id.action_favorite, icon);
+        remoteView.setOnClickPendingIntent(R.id.action_favorite, mFavoriteIntent);
     }
 
-    private void loadCoverArtImage(final NotificationCompat.Builder builder, String coverArtUrl) {
+    private void loadCoverArtImage(final NotificationCompat.Builder builder,
+                                   final RemoteViews remoteView, final RemoteViews expandedView,
+                                   String coverArtUrl) {
         // Must keep a strong reference to the target to avoid garbage collection
         mTarget = new Target() {
             @Override
             public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                // Add the image to the notification and update it
-                builder.setLargeIcon(bitmap);
-                mNotificationManager.notify(NOTIFICATION_ID, builder.build());
+                Log.d("====", "onBitmapLoaded");
+                // Add the image to the remote views
+                remoteView.setImageViewBitmap(R.id.image, bitmap);
+                expandedView.setImageViewBitmap(R.id.image, bitmap);
+
+                // Update the notification
+                Notification notification = builder.build();
+                notification.contentView = remoteView;
+                notification.bigContentView = expandedView;
+                mNotificationManager.notify(NOTIFICATION_ID, notification);
             }
 
             @Override
@@ -305,10 +315,16 @@ public class MediaNotificationManager extends BroadcastReceiver {
                 mTransportControls.play();
                 break;
             case ACTION_STOP:
-                mTransportControls.stop();
+                // Pause will stop the playback but not release the player
+                mTransportControls.pause();
                 break;
             case ACTION_FAVORITE:
                 mTransportControls.sendCustomAction(ACTION_FAVORITE, null);
+                break;
+            case ACTION_DISMISS:
+                // Stop will stop playback, release the player, and stop the service
+                mTransportControls.stop();
+                break;
             default:
                 Log.w("WUVA", "Unknown intent with Action " + action);
         }
@@ -324,8 +340,8 @@ public class MediaNotificationManager extends BroadcastReceiver {
             mPlaybackState = playbackState;
 
             // Update notification based on new PlaybackState
-            if (playbackState.getState() == PlaybackStateCompat.STATE_STOPPED ||
-                    playbackState.getState() == PlaybackStateCompat.STATE_NONE) {
+            if (playbackState.getState() == PlaybackStateCompat.STATE_NONE ||
+                    playbackState.getState() == PlaybackStateCompat.STATE_ERROR) {
                 stopNotification();
             } else {
                 Notification notification = createNotification();

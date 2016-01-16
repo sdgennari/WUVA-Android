@@ -36,6 +36,16 @@
             android:src="@drawable/ic_star_border_white_24dp"
             android:scaleType="center" />
 
+        <!-- Gray version of the favorite icon for when favorites are disabled -->
+        <ImageView
+            android:id="@+id/action_favorite_disabled"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="@dimen/notification_action_size"
+            android:src="@drawable/ic_star_border_gray_24dp"
+            android:visibility="gone"
+            android:scaleType="center" />
+
     </LinearLayout>
 
     <LinearLayout
