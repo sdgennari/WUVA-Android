@@ -8,8 +8,11 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.media.MediaDescriptionCompat;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.RatingCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,7 +26,6 @@ import com.poofstudios.android.wuvaradio.R;
 import com.poofstudios.android.wuvaradio.RadioPlayerService;
 import com.poofstudios.android.wuvaradio.utils.BlurTransform;
 import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Target;
 
 public class RadioFragment extends MediaBaseFragment {
 
@@ -32,11 +34,15 @@ public class RadioFragment extends MediaBaseFragment {
     private TextView mTitleView;
     private TextView mArtistView;
     private ToggleButton mStartStopButton;
+
+    private ToggleButton mFavoriteButton;
     private ImageView mBackgroundImage;
 
     private String mTitle;
     private String mArtist;
     private String mCoverArtUrl;
+
+    public static final String ACTION_FAVORITE = "com.poofstudios.android.wuvaradio.favorite";
 
     public RadioFragment() {
         // Required empty public constructor
@@ -69,6 +75,18 @@ public class RadioFragment extends MediaBaseFragment {
                         controller.getTransportControls().stop();
                     }
                 }
+            }
+        });
+
+        mFavoriteButton = (ToggleButton) rootView.findViewById(R.id.toggle_favorite);
+        mFavoriteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MediaControllerCompat controller = getActivity().getSupportMediaController();
+                if (controller != null) {
+                    controller.getTransportControls().sendCustomAction(ACTION_FAVORITE, null);
+                }
+
             }
         });
 
@@ -134,6 +152,23 @@ public class RadioFragment extends MediaBaseFragment {
         // playbackState.getCustomActions()
     }
 
+    private void updateFavoriteButton() {
+        int icon = R.drawable.ic_star_border_white_24dp;
+
+        // If the song is already a favorite, change icon
+        if (getActivity() != null) {
+            MediaMetadataCompat metadata = getActivity().getSupportMediaController().getMetadata();
+            if (metadata !=  null) {
+                RatingCompat rating = metadata.getRating(MediaMetadataCompat.METADATA_KEY_USER_RATING);
+                if (rating != null && rating.hasHeart()) {
+                    icon = R.drawable.ic_star_white_24dp;
+                }
+            }
+        }
+
+        mFavoriteButton.setButtonDrawable(icon);
+    }
+
     @Override
     protected void updateMediaDescription(MediaDescriptionCompat description) {
         Log.d("====", "updateMediaDescription");
@@ -151,6 +186,8 @@ public class RadioFragment extends MediaBaseFragment {
             // Request is still pending, so no MediaUri set
             mCoverArtUrl = "";
         }
+
+        updateFavoriteButton();
 
         updateUI();
     }
