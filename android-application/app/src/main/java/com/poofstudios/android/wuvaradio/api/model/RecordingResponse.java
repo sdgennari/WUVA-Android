@@ -1,5 +1,7 @@
 package com.poofstudios.android.wuvaradio.api.model;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.List;
 
 public class RecordingResponse {
@@ -20,5 +22,12 @@ public class RecordingResponse {
         public String id;
         public String title;
         public String status;
+
+        @SerializedName("release-group")
+        public ReleaseGroup releaseGroup;
+    }
+
+    public class ReleaseGroup {
+        public String id;
     }
 }

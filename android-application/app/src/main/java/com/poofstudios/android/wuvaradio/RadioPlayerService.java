@@ -18,17 +18,8 @@ import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 
 import com.poofstudios.android.wuvaradio.api.CoverArtUrlCache;
-import com.poofstudios.android.wuvaradio.api.MusicBrainzApi;
-import com.poofstudios.android.wuvaradio.api.MusicBrainzService;
-import com.poofstudios.android.wuvaradio.api.model.RecordingResponse;
 import com.poofstudios.android.wuvaradio.model.Favorite;
 import com.poofstudios.android.wuvaradio.model.Track;
-import com.poofstudios.android.wuvaradio.utils.UrlUtils;
-
-import retrofit.Call;
-import retrofit.Callback;
-import retrofit.Response;
-import retrofit.Retrofit;
 
 public class RadioPlayerService extends Service implements
         AudioManager.OnAudioFocusChangeListener,

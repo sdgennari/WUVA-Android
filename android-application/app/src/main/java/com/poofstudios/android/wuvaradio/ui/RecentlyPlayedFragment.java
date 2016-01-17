@@ -11,29 +11,18 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CompoundButton;
-import android.widget.ToggleButton;
 
 import com.poofstudios.android.wuvaradio.R;
 import com.poofstudios.android.wuvaradio.RadioPlayback;
 import com.poofstudios.android.wuvaradio.api.CoverArtUrlCache;
-import com.poofstudios.android.wuvaradio.api.MusicBrainzApi;
-import com.poofstudios.android.wuvaradio.api.MusicBrainzService;
-import com.poofstudios.android.wuvaradio.api.model.RecordingResponse;
 import com.poofstudios.android.wuvaradio.model.Track;
 import com.poofstudios.android.wuvaradio.utils.StringUtils;
-import com.poofstudios.android.wuvaradio.utils.UrlUtils;
 import com.tritondigital.player.CuePoint;
 import com.tritondigital.player.CuePointHistory;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
-
-import retrofit.Call;
-import retrofit.Callback;
-import retrofit.Response;
-import retrofit.Retrofit;
 
 public class RecentlyPlayedFragment extends MediaBaseFragment implements
         CuePointHistory.CuePointHistoryListener,
