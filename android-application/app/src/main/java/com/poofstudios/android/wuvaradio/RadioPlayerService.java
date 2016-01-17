@@ -17,6 +17,7 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 
+import com.poofstudios.android.wuvaradio.api.CoverArtUrlCache;
 import com.poofstudios.android.wuvaradio.api.MusicBrainzApi;
 import com.poofstudios.android.wuvaradio.api.MusicBrainzService;
 import com.poofstudios.android.wuvaradio.api.model.RecordingResponse;
@@ -42,7 +43,7 @@ public class RadioPlayerService extends Service implements
     private AudioManager mAudioManager;
 
     // For getting album cover art
-    private MusicBrainzService musicBrainzService;
+    private CoverArtUrlCache mUrlCache;
 
     // Manages notifications
     private MediaNotificationManager mMediaNotificationManager;
@@ -68,7 +69,7 @@ public class RadioPlayerService extends Service implements
     public void onCreate() {
         super.onCreate();
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        musicBrainzService = MusicBrainzApi.getService();
+        mUrlCache = CoverArtUrlCache.getUrlCache();
 
         mPlayback = new RadioPlayback(this);
         mPlayback.setCallback(this);
@@ -158,45 +159,23 @@ public class RadioPlayerService extends Service implements
         return mMediaSession.getSessionToken();
     }
 
-    /**
-     * Searches MusicBrainz database for 'release id' associated with song, then broadcasts cover art URL
-     * @param title Title of song
-     * @param artist Artist of song
-     */
-    private void getCoverArtUrl(String title, String artist) {
-        Log.d("====", "getCoverArtUrl");
-        // Formats query
-        String query = UrlUtils.formatMusicBrainzQuery(title, artist);
-
-        // Create callback object
-        Call<RecordingResponse> recordingResponseCall = musicBrainzService.getMBID(query);
-
-        // Enqueue query, handle response
-        recordingResponseCall.enqueue(new Callback<RecordingResponse>() {
-            @Override
-            public void onResponse(Response<RecordingResponse> response, Retrofit retrofit) {
-                // Response not null
-                if (response != null && response.body() != null) {
-                    RecordingResponse recordingResponse = response.body();
-                    // At least one recording returned
-                    if (recordingResponse.count != 0) {
-                        // Get the first recording
-                        RecordingResponse.Recording recording = recordingResponse.recordings.get(0);
-
-                        // At least one release
-                        if (recording.releases.size() != 0) {
-                            RecordingResponse.Release release = recording.releases.get(0);
-                            addCoverArtUrlToMetadata(UrlUtils.formatCoverArtUrl(release.id));
-                        }
+    private void getCoverArtUrl(final Track track) {
+        // Get the cover art url for the track
+        String coverArtUrl = mUrlCache.getCoverArtUrl(track);
+        if (coverArtUrl == null) {
+            // Cache miss, so fetch the url for the track
+            mUrlCache.fetchCoverArtUrl(track, new CoverArtUrlCache.CacheResultListener() {
+                @Override
+                public void onResult(@Nullable String coverArtUrl) {
+                    if (coverArtUrl != null) {
+                        addCoverArtUrlToMetadata(coverArtUrl);
                     }
                 }
-            }
-
-            @Override
-            public void onFailure(Throwable t) {
-                Log.e("WUVA", "error: " + t.getLocalizedMessage());
-            }
-        });
+            });
+        } else {
+            // Cache hit, so instantly add cover art to metadata
+            addCoverArtUrlToMetadata(coverArtUrl);
+        }
     }
 
     /**
@@ -255,9 +234,8 @@ public class RadioPlayerService extends Service implements
             RatingCompat rating = RatingCompat.newHeartRating(isFavorite);
             addRatingToMetadata(rating);
 
-
-            // Make an async query to get the cover art url
-            getCoverArtUrl(title, artist);
+            // Get the cover art for the track (from cache or api call)
+            getCoverArtUrl(track);
         }
     }
 

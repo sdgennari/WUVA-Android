@@ -1,6 +1,7 @@
 package com.poofstudios.android.wuvaradio.ui;
 
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -15,6 +16,7 @@ import android.widget.ToggleButton;
 
 import com.poofstudios.android.wuvaradio.R;
 import com.poofstudios.android.wuvaradio.RadioPlayback;
+import com.poofstudios.android.wuvaradio.api.CoverArtUrlCache;
 import com.poofstudios.android.wuvaradio.api.MusicBrainzApi;
 import com.poofstudios.android.wuvaradio.api.MusicBrainzService;
 import com.poofstudios.android.wuvaradio.api.model.RecordingResponse;
@@ -47,7 +49,7 @@ public class RecentlyPlayedFragment extends MediaBaseFragment implements
     private ArrayDeque<Track> mPendingCoverArtRequests;
 
     // For getting album cover art
-    private MusicBrainzService mMusicBrainzService;
+    CoverArtUrlCache mUrlCache;
 
     public RecentlyPlayedFragment() {
         // Required empty public constructor
@@ -60,7 +62,8 @@ public class RecentlyPlayedFragment extends MediaBaseFragment implements
         mCuePointDescriptionList = new ArrayList<>();
         mPendingCoverArtRequests = new ArrayDeque<>();
 
-        mMusicBrainzService = MusicBrainzApi.getService();
+        // Get the instance of the url cache
+        mUrlCache = CoverArtUrlCache.getUrlCache();
 
         mCuePointHistory = new CuePointHistory();
         mCuePointHistory.setListener(this);
@@ -173,64 +176,42 @@ public class RecentlyPlayedFragment extends MediaBaseFragment implements
         }
     }
 
-    // Mostly copied from RadioPlayerService
-
-    /**
-     * Fetches the cover art url for a track using the MusicBrainz API. When the request returns,
-     * this method calls {@link #maybeFetchNextCoverArtImageUrl()} to fetch the next url in the list
-     * of pending requests
-     * @param track track to get cover art url for
-     */
     private void getCoverArtUrl(final Track track) {
-        // Formats query
-        String query = UrlUtils.formatMusicBrainzQuery(track.getTitle(), track.getArtist());
-
-        // Create callback object
-        Call<RecordingResponse> recordingResponseCall = mMusicBrainzService.getMBID(query);
-
-        // Enqueue query, handle response
-        recordingResponseCall.enqueue(new Callback<RecordingResponse>() {
-            @Override
-            public void onResponse(Response<RecordingResponse> response, Retrofit retrofit) {
-                // Response not null
-                if (response != null && response.body() != null) {
-                    RecordingResponse recordingResponse = response.body();
-                    // At least one recording returned
-                    if (recordingResponse.count != 0) {
-                        // Get the first recording
-                        RecordingResponse.Recording recording = recordingResponse.recordings.get(0);
-
-                        // At least one release
-                        if (recording.releases.size() != 0) {
-                            RecordingResponse.Release release = recording.releases.get(0);
-                            String coverArtUrl = UrlUtils.formatCoverArtUrl(release.id);
-
-                            track.setCoverArtUrl(coverArtUrl);
-                            int idx = mCuePointDescriptionList.indexOf(track);
-                            // Replace the track in the list
-                            if (idx != -1) {
-                                mCuePointDescriptionList.remove(idx);
-                                mCuePointDescriptionList.add(idx, track);
-
-                                // Only update this specific item in the adapter
-                                mAdapter.notifyItemChanged(idx);
-                            }
-                        }
+        // Get the cover art url for the track
+        String coverArtUrl = mUrlCache.getCoverArtUrl(track);
+        if (coverArtUrl == null) {
+            // Cache miss, so fetch the url for the track
+            mUrlCache.fetchCoverArtUrl(track, new CoverArtUrlCache.CacheResultListener() {
+                @Override
+                public void onResult(@Nullable String coverArtUrl) {
+                    if (coverArtUrl != null) {
+                        addCoverArtUrlToTrack(track, coverArtUrl);
+                    } else {
+                        Log.d("====", track.getTitle() + " by " + track.getArtist() + " has null coverArtUrl");
                     }
                 }
+            });
+        } else {
+            // Cache hit, so instantly add the url to the track
+            addCoverArtUrlToTrack(track, coverArtUrl);
+        }
 
-                // Get the next image, if needed
-                maybeFetchNextCoverArtImageUrl();
-            }
+        // Get the next image, if needed
+        maybeFetchNextCoverArtImageUrl();
+    }
 
-            @Override
-            public void onFailure(Throwable t) {
-                // Get the next image, if needed
-                maybeFetchNextCoverArtImageUrl();
+    private void addCoverArtUrlToTrack(final Track track, String coverArtUrl) {
+        track.setCoverArtUrl(coverArtUrl);
 
-                Log.e("WUVA", "Error: " + t.getLocalizedMessage());
-            }
-        });
+        // Replace the track in the list
+        int idx = mCuePointDescriptionList.indexOf(track);
+        if (idx != -1) {
+            mCuePointDescriptionList.remove(idx);
+            mCuePointDescriptionList.add(idx, track);
+
+            // Only update this specific item in the adapter
+            mAdapter.notifyItemChanged(idx);
+        }
     }
 
     @Override
