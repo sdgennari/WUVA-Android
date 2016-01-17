@@ -24,16 +24,14 @@ public class LineDividerDecoration extends RecyclerView.ItemDecoration {
 
     @Override
     public void onDrawOver(Canvas c, RecyclerView parent, RecyclerView.State state) {
+        // Note: Draw the line based on the top of the child (skipping the first child) so that
+        // dividers follow views during remove animation
         int numChildren = parent.getChildCount();
-        for (int i = 0; i < numChildren; i++) {
+        for (int i = 1; i < numChildren; i++) {
             View child = parent.getChildAt(i);
-            int position = parent.getChildLayoutPosition(child);
 
-            // Skip last position
-            if (position == state.getItemCount()-1) {
-                continue;
-            }
-            int y = child.getBottom();
+            // Adjust y by the offset to account for animations
+            int y = child.getTop() + (int)child.getTranslationY();
             c.drawLine(0, y, child.getRight(), y, mPaint);
         }
     }

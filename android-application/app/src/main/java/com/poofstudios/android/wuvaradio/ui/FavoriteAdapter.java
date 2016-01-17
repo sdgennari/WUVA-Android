@@ -61,6 +61,31 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.ViewHo
         }
     }
 
+    public Favorite removeFavorite(int position) {
+        // Get the favorite from the list
+        Favorite favorite = mFavoriteList.remove(position);
+
+        // Remove the song from the user's favorites
+        mFavoriteManager.setFavorite(favorite, false);
+
+        // Notify the adapter that a favorite has been removed
+        notifyItemRemoved(position);
+
+        return favorite;
+    }
+
+    public void addFavorite(Favorite favorite) {
+        // Add the favorite to the adapter
+        mFavoriteList.add(favorite);
+        sortFavoritesByTrack();
+
+        // Add the song to the user's favorites
+        mFavoriteManager.setFavorite(favorite, true);
+
+        // Notify the adapter that a favorite has been added
+        notifyItemInserted(mFavoriteList.indexOf(favorite));
+    }
+
     /**
      * Sorts favorites by when they were created
      */

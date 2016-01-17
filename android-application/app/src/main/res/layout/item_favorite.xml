@@ -36,8 +36,10 @@
             android:layout_height="wrap_content"
             android:maxLines="1"
             android:ellipsize="end"
-            tools:text="Song title"
-            android:textColor="@color/lightTextColorPrimary"/>
+            android:textSize="@dimen/text_title"
+            android:textStyle="bold"
+            android:textColor="@color/lightTextColorPrimary"
+            tools:text="Song title" />
 
         <TextView
             android:id="@+id/artist"
@@ -45,8 +47,9 @@
             android:layout_height="wrap_content"
             android:maxLines="1"
             android:ellipsize="end"
-            tools:text="Song Artist"
-            android:textColor="@color/lightTextColorPrimary"/>
+            android:textSize="@dimen/text_subtitle"
+            android:textColor="@color/lightTextColorSecondary"
+            tools:text="Song Artist" />
 
     </LinearLayout>
 

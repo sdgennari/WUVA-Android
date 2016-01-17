@@ -12,6 +12,7 @@
     <color name="lightColorPrimaryDark">#977219</color>
     <color name="lightColorAccent">#1D4AB1</color>
     <color name="lightTextColorPrimary">#222222</color>
+    <color name="lightTextColorSecondary">#303030</color>
 
     <!-- Shared Colors -->
     <color name="dividerColor">#EEEEEE</color>
