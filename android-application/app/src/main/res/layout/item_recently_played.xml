@@ -50,7 +50,7 @@
             android:maxLines="1"
             android:ellipsize="end"
             tools:text="Song title"
-            android:textColor="@color/lightTextColorPrimary"/>
+            style="@style/TextAppearance.AppTheme.Title" />
 
         <TextView
             android:id="@+id/artist"
@@ -59,7 +59,7 @@
             android:maxLines="1"
             android:ellipsize="end"
             tools:text="Song Artist"
-            android:textColor="@color/lightTextColorPrimary"/>
+            style="@style/TextAppearance.AppTheme.Subtitle" />
 
     </LinearLayout>
 

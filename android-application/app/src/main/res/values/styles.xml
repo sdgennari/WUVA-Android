@@ -37,4 +37,31 @@
         <item name="android:actionMenuTextColor">@color/darkColorAccent</item>
     </style>
 
+    <!-- Text Styles -->
+    <style name="TextAppearance" />
+
+    <style name="TextAppearance.AppTheme" />
+
+    <style name="TextAppearance.AppTheme.Display" parent="TextAppearance.AppCompat.Title">
+        <item name="android:textSize">@dimen/text_title</item>
+        <item name="android:textColor">@color/darkTextColorPrimary</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="TextAppearance.AppTheme.Display2" parent="TextAppearance.AppCompat.Title">
+        <item name="android:textSize">@dimen/text_subtitle</item>
+        <item name="android:textColor">@color/darkTextColorSecondary</item>
+    </style>
+
+    <style name="TextAppearance.AppTheme.Title" parent="TextAppearance.AppCompat.Title">
+        <item name="android:textSize">@dimen/text_title</item>
+        <item name="android:textColor">@color/lightTextColorPrimary</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="TextAppearance.AppTheme.Subtitle" parent="TextAppearance.AppCompat.Title">
+        <item name="android:textSize">@dimen/text_subtitle</item>
+        <item name="android:textColor">@color/lightTextColorSecondary</item>
+    </style>
+
 </resources>

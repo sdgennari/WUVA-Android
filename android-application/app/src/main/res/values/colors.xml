@@ -4,18 +4,18 @@
     <color name="darkColorPrimary">#222222</color>
     <color name="darkColorPrimaryDark">#000000</color>
     <color name="darkColorAccent">#6f6f6f</color>
-    <color name="darkTextColorPrimary">#FFFFFF</color>
-    <color name="darkTextColorSecondary">#b2b2b2</color>
+    <color name="darkTextColorPrimary">#ffffff</color>
+    <color name="darkTextColorSecondary">#bcbcbc</color>
 
     <!-- Light Theme Colors -->
     <color name="lightColorPrimary">#B1851D</color>
     <color name="lightColorPrimaryDark">#977219</color>
     <color name="lightColorAccent">#1D4AB1</color>
     <color name="lightTextColorPrimary">#222222</color>
-    <color name="lightTextColorSecondary">#303030</color>
+    <color name="lightTextColorSecondary">#737373</color>
 
     <!-- Shared Colors -->
-    <color name="dividerColor">#EEEEEE</color>
+    <color name="dividerColor">#e0e0e0</color>
     <color name="windowBackground">#EEEEEE</color>
 
     <color name="notificationBackground">#222222</color>

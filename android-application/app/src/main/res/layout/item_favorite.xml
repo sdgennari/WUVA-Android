@@ -36,20 +36,16 @@
             android:layout_height="wrap_content"
             android:maxLines="1"
             android:ellipsize="end"
-            android:textSize="@dimen/text_title"
-            android:textStyle="bold"
-            android:textColor="@color/lightTextColorPrimary"
-            tools:text="Song title" />
+            tools:text="Song title"
+            style="@style/TextAppearance.AppTheme.Title" />
 
         <TextView
             android:id="@+id/artist"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:maxLines="1"
-            android:ellipsize="end"
-            android:textSize="@dimen/text_subtitle"
-            android:textColor="@color/lightTextColorSecondary"
-            tools:text="Song Artist" />
+            tools:text="Song Artist"
+            style="@style/TextAppearance.AppTheme.Subtitle" />
 
     </LinearLayout>
 

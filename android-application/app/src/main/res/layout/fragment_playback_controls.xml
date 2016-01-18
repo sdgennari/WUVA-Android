@@ -5,12 +5,13 @@
     android:layout_height="wrap_content"
     android:padding="@dimen/padding_half"
     android:background="@android:color/white"
-    tools:context=".ui.TabActivity">
+    tools:context=".ui.MainActivity">
     
     <ImageView
         android:id="@+id/cover_art_image"
         android:layout_width="@dimen/controls_image_size"
         android:layout_height="@dimen/controls_image_size"
+        android:scaleType="centerCrop"
         android:background="@color/lightColorPrimaryDark"
         android:src="@drawable/cover_art_placeholder" />
 
@@ -43,8 +44,8 @@
             android:layout_height="wrap_content"
             android:maxLines="1"
             android:ellipsize="end"
-            android:textColor="@color/lightTextColorPrimary"
-            tools:text="Current song title"/>
+            tools:text="Current song title"
+            style="@style/TextAppearance.AppTheme.Title" />
 
         <TextView
             android:id="@+id/artist"
@@ -52,8 +53,8 @@
             android:layout_height="wrap_content"
             android:maxLines="1"
             android:ellipsize="end"
-            android:textColor="@color/lightTextColorPrimary"
-            tools:text="Current artist"/>
+            tools:text="Current artist"
+            style="@style/TextAppearance.AppTheme.Subtitle" />
     </LinearLayout>
 
 </RelativeLayout>

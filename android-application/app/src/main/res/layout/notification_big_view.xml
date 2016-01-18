@@ -70,21 +70,20 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@color/darkTextColorPrimary"
-            android:textSize="@dimen/text_notification_title"
-            android:textStyle="bold"
             android:maxLines="1"
             android:ellipsize="end"
-            tools:text="Song title here" />
+            tools:text="Song title here"
+            style="@style/TextAppearance.AppTheme.Title"/>
 
         <TextView
             android:id="@+id/subtitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@color/darkTextColorSecondary"
-            android:textSize="@dimen/text_notification_subtitle"
             android:maxLines="1"
             android:ellipsize="end"
-            tools:text="Song artist here" />
+            tools:text="Song artist here"
+            style="@style/TextAppearance.AppTheme.Subtitle"/>
 
     </LinearLayout>
 
