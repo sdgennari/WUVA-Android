@@ -196,6 +196,7 @@ public class MediaNotificationManager extends BroadcastReceiver {
         // Add data to notification builder
         NotificationCompat.Builder builder = new NotificationCompat.Builder(mService);
         builder.setSmallIcon(R.drawable.ic_notification)
+                .setDeleteIntent(mDismissIntent)
                 .setContentIntent(createContentIntent(description));
 
         // Allow the notification to be dismissed based on state
