@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">92.7 Nash Icon</string>
 
+    <string name="default_text">Nash Icon 92.7</string>
+
     <!-- Fragment Page Titles -->
     <string name="title_radio">Radio</string>
     <string name="title_favorite">Favorites</string>

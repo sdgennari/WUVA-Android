@@ -68,6 +68,7 @@
             android:gravity="center"
             android:maxLines="1"
             android:ellipsize="end"
+            android:textColor="@color/darkTextColorPrimary"
             tools:text="Song artist here"
             style="@style/TextAppearance.AppTheme.Display2"/>
 
