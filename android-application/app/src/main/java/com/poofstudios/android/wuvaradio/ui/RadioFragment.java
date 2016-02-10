@@ -109,7 +109,7 @@ public class RadioFragment extends MediaBaseFragment {
         if(context != null && mCoverArtUrl != null && !mCoverArtUrl.isEmpty()) {
             Picasso.with(context).load(mCoverArtUrl).placeholder(R.drawable.cover_art_placeholder).fit().centerInside().into(mCoverArtView);
             Picasso.with(context).load(mCoverArtUrl).transform(new BlurTransform(context)).into(mBackgroundImage);
-        } else {
+        } else if (context != null) {
             Picasso.with(context).load(R.drawable.placeholder_background).transform(new BlurTransform(context)).into(mBackgroundImage);
             Picasso.with(context).load(R.drawable.cover_art_placeholder).into(mCoverArtView);
         }

@@ -22,8 +22,7 @@ public class RadioPlayback implements MediaPlayer.OnCuePointReceivedListener,
     // TODO Get actual Broadcaster and Name from WUVA
     public static final String STATION_BROADCASTER = "WUVA";
     public static final String STATION_NAME = "WUVA";
-//    public static final String STATION_MOUNT = "WUVA";
-    public static final String STATION_MOUNT = "MOBILEFM";
+    public static final String STATION_MOUNT = "WUVA";
 
     // mState is one of the states given by PlaybackStateCompat.STATE_*
     private int mState;
