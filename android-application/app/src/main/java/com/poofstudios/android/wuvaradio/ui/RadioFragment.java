@@ -3,6 +3,7 @@ package com.poofstudios.android.wuvaradio.ui;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -90,6 +91,10 @@ public class RadioFragment extends MediaBaseFragment {
             }
         });
 
+        Picasso.with(getActivity()).load(R.drawable.placeholder_background)
+                .transform(new BlurTransform(getActivity())).into(mBackgroundImage);
+        Picasso.with(getActivity()).load(R.drawable.cover_art_placeholder).into(mCoverArtView);
+
         return rootView;
     }
 
@@ -105,13 +110,12 @@ public class RadioFragment extends MediaBaseFragment {
             Picasso.with(context).load(mCoverArtUrl).placeholder(R.drawable.cover_art_placeholder).fit().centerInside().into(mCoverArtView);
             Picasso.with(context).load(mCoverArtUrl).transform(new BlurTransform(context)).into(mBackgroundImage);
         } else {
-            Picasso.with(context).load(R.drawable.cover_art_placeholder).fit().centerInside().into(mCoverArtView);
-            mBackgroundImage.setImageResource(R.color.darkColorPrimaryDark);
+            Picasso.with(context).load(R.drawable.placeholder_background).transform(new BlurTransform(context)).into(mBackgroundImage);
+            Picasso.with(context).load(R.drawable.cover_art_placeholder).into(mCoverArtView);
         }
 
         Log.d("url", "Cover art: " + mCoverArtUrl);
     }
-
 
     private void startService() {
         if (getActivity() != null) {
