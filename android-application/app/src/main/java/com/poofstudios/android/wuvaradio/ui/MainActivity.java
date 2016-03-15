@@ -7,6 +7,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -22,6 +23,7 @@ import com.poofstudios.android.wuvaradio.R;
 public class MainActivity extends MediaBaseActivity {
 
     private PlaybackControlsFragment mPlaybackControlsFragment;
+    private CardView mPlaybackControlsContainer;
 
     // Nav drawer item titles
     private static final String NAV_RADIO = "Radio";
@@ -90,6 +92,7 @@ public class MainActivity extends MediaBaseActivity {
         // Get the playback control fragment from the ui
         mPlaybackControlsFragment = (PlaybackControlsFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.fragment_playback_controls);
+        mPlaybackControlsContainer = (CardView) findViewById(R.id.controls_container);
     }
 
     private void selectNavItem(int position) {
@@ -215,6 +218,9 @@ public class MainActivity extends MediaBaseActivity {
                     .hide(mPlaybackControlsFragment)
                     .commitAllowingStateLoss();
         }
+        if (mPlaybackControlsContainer != null) {
+            mPlaybackControlsContainer.setVisibility(View.GONE);
+        }
     }
 
     private void showPlaybackControls() {
@@ -222,6 +228,9 @@ public class MainActivity extends MediaBaseActivity {
             getSupportFragmentManager().beginTransaction()
                     .show(mPlaybackControlsFragment)
                     .commitAllowingStateLoss();
+        }
+        if (mPlaybackControlsContainer != null) {
+            mPlaybackControlsContainer.setVisibility(View.VISIBLE);
         }
     }
 }

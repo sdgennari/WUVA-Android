@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.os.RemoteException;
 import android.support.v4.media.MediaDescriptionCompat;
@@ -168,29 +167,29 @@ public class MediaNotificationManager extends BroadcastReceiver {
         contentView.setTextViewText(R.id.subtitle, description.getSubtitle());
 
         // Big remote view
-        RemoteViews expandedView = new RemoteViews(mService.getPackageName(),
-                R.layout.notification_big_view);
-        expandedView.setImageViewResource(R.id.image, R.drawable.cover_art_placeholder);
-        expandedView.setTextViewText(R.id.title, description.getTitle());
-        expandedView.setTextViewText(R.id.subtitle, description.getSubtitle());
+//        RemoteViews expandedView = new RemoteViews(mService.getPackageName(),
+//                R.layout.notification_big_view);
+//        expandedView.setImageViewResource(R.id.image, R.drawable.cover_art_placeholder);
+//        expandedView.setTextViewText(R.id.title, description.getTitle());
+//        expandedView.setTextViewText(R.id.subtitle, description.getSubtitle());
 
         // Configure play/stop action
         configurePlayStopButton(contentView);
-        configurePlayStopButton(expandedView);
+//        configurePlayStopButton(expandedView);
 
         // Configure favorite action
         configureFavoriteButton(contentView);
-        configureFavoriteButton(expandedView);
+//        configureFavoriteButton(expandedView);
 
         // Show/hide the favorite button based on playback state
         if (mPlaybackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
             contentView.setViewVisibility(R.id.action_favorite, View.VISIBLE);
-            expandedView.setViewVisibility(R.id.action_favorite, View.VISIBLE);
-            expandedView.setViewVisibility(R.id.action_favorite_disabled, View.GONE);
+//            expandedView.setViewVisibility(R.id.action_favorite, View.VISIBLE);
+//            expandedView.setViewVisibility(R.id.action_favorite_disabled, View.GONE);
         } else {
             contentView.setViewVisibility(R.id.action_favorite, View.GONE);
-            expandedView.setViewVisibility(R.id.action_favorite, View.GONE);
-            expandedView.setViewVisibility(R.id.action_favorite_disabled, View.VISIBLE);
+//            expandedView.setViewVisibility(R.id.action_favorite, View.GONE);
+//            expandedView.setViewVisibility(R.id.action_favorite_disabled, View.VISIBLE);
         }
 
         // Add data to notification builder
@@ -203,15 +202,15 @@ public class MediaNotificationManager extends BroadcastReceiver {
         setNotificationPlaybackState(builder);
 
         // Load the image async with Picasso
-        if (description.getIconUri() != null) {
-            loadCoverArtImage(builder, contentView, expandedView,
-                    description.getIconUri().toString());
-        }
+//        if (description.getIconUri() != null) {
+//            loadCoverArtImage(builder, contentView, expandedView,
+//                    description.getIconUri().toString());
+//        }
 
         // Set the custom content views for the notification
         Notification notification = builder.build();
         notification.contentView = contentView;
-        notification.bigContentView = expandedView;
+//        notification.bigContentView = expandedView;
 
         return notification;
     }

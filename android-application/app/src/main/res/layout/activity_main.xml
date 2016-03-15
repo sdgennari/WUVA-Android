@@ -32,7 +32,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentBottom="true"
-                app:cardElevation="8dp" >
+                android:layout_marginLeft="-3dp"
+                android:layout_marginRight="-3dp"
+                android:layout_marginTop="-4dp"
+                app:cardUseCompatPadding="true"
+                app:cardCornerRadius="0dp">
 
                 <fragment android:name="com.poofstudios.android.wuvaradio.ui.PlaybackControlsFragment"
                     android:id="@+id/fragment_playback_controls"
