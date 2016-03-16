@@ -17,12 +17,12 @@ import java.util.HashSet;
  */
 public class FavoriteManager {
 
-        // Set of current user favorites
-        private static HashSet<Favorite> mFavorites;
+    // Set of current user favorites
+    private static HashSet<Favorite> mFavorites;
 
-        private static SharedPreferences mPrefs;
+    private static SharedPreferences mPrefs;
 
-        static FavoriteManager mFavoriteManager;
+    static FavoriteManager mFavoriteManager;
 
     public static FavoriteManager getFavoriteManager(Context context) {
         if (mFavoriteManager == null) {

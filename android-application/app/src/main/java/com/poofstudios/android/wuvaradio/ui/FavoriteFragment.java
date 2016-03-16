@@ -33,7 +33,16 @@ public class FavoriteFragment extends MediaBaseFragment {
         @Override
         public void onSwiped(final RecyclerView.ViewHolder viewHolder, int direction) {
             int position = viewHolder.getAdapterPosition();
-            final Favorite favorite = mAdapter.removeFavorite(position);
+
+            // Get the favorite to be removed
+            final Favorite favorite = mAdapter.getFavorite(position);
+
+            // Remove the favorite and possibly update the current song metadata
+            boolean songWasUpdated = maybeUpdateCurrentSongFavorite(favorite);
+            if (!songWasUpdated) {
+                // Remove the favorite from the adapter if the session did not handle it
+                mAdapter.removeFavorite(position);
+            }
 
             // Make a snackbar to show the user
             Snackbar snackbar = Snackbar.make(mCoordinatorLayout, "Removed song from favorites", Snackbar.LENGTH_LONG);
@@ -43,7 +52,13 @@ public class FavoriteFragment extends MediaBaseFragment {
                 @Override
                 public void onClick(View v) {
                     // Add the favorite back to the user's favorites
-                    mAdapter.addFavorite(favorite);
+                    // Possibly update the current song metadata
+                    boolean songWasUpdated = maybeUpdateCurrentSongFavorite(favorite);
+
+                    if (!songWasUpdated) {
+                        // Add the favorite from the adapter if the session did not handle it
+                        mAdapter.addFavorite(favorite);
+                    }
                 }
             });
 

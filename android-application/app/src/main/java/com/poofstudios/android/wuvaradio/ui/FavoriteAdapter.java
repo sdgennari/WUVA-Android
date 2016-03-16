@@ -74,6 +74,10 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.ViewHo
         return favorite;
     }
 
+    public Favorite getFavorite(int position) {
+        return mFavoriteList.get(position);
+    }
+
     public void addFavorite(Favorite favorite) {
         // Add the favorite to the adapter
         mFavoriteList.add(favorite);
