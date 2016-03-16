@@ -57,7 +57,8 @@ public class RecentlyPlayedFragment extends MediaBaseFragment implements
         mCuePointHistory = new CuePointHistory();
         mCuePointHistory.setListener(this);
         mCuePointHistory.setCueTypeFilter(CuePoint.CUE_TYPE_VALUE_TRACK);
-        mCuePointHistory.setMaxItems(15);
+        // Get the 16 most recent songs since the first one is the currently playing song
+        mCuePointHistory.setMaxItems(16);
         mCuePointHistory.setMount(RadioPlayback.STATION_MOUNT);
 
         mCuePointHistory.request();

@@ -61,7 +61,8 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
     // Replace the contents of the list item
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        Track track = mCuePointDescriptionList.get(position);
+        // Increment position by 1 to skip the first item in the list
+        Track track = mCuePointDescriptionList.get(position+1);
         final Favorite favorite = new Favorite(track);
 
         holder.mTitleView.setText(track.getTitle());
@@ -93,6 +94,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
 
     @Override
     public int getItemCount() {
-        return mCuePointDescriptionList.size();
+        // Decrement size by 1 since the first element is not shown
+        return mCuePointDescriptionList.size()-1;
     }
 }
