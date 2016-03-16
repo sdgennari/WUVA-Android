@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import com.poofstudios.android.wuvaradio.R;
 import com.poofstudios.android.wuvaradio.RadioPlayback;
 import com.poofstudios.android.wuvaradio.api.CoverArtUrlCache;
+import com.poofstudios.android.wuvaradio.model.Favorite;
 import com.poofstudios.android.wuvaradio.model.Track;
 import com.poofstudios.android.wuvaradio.utils.StringUtils;
 import com.tritondigital.player.CuePoint;
@@ -26,7 +27,8 @@ import java.util.List;
 
 public class RecentlyPlayedFragment extends MediaBaseFragment implements
         CuePointHistory.CuePointHistoryListener,
-        SwipeRefreshLayout.OnRefreshListener {
+        SwipeRefreshLayout.OnRefreshListener,
+        HistoryAdapter.OnSongFavoriteUpdateListener {
 
     private RecyclerView mRecyclerView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
@@ -80,7 +82,7 @@ public class RecentlyPlayedFragment extends MediaBaseFragment implements
         mLayoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView.setLayoutManager(mLayoutManager);
 
-        mAdapter = new HistoryAdapter(getActivity());
+        mAdapter = new HistoryAdapter(getActivity(), this);
         mRecyclerView.setAdapter(mAdapter);
 
         return rootView;
@@ -107,6 +109,14 @@ public class RecentlyPlayedFragment extends MediaBaseFragment implements
 
             // Only update that an item was added to the adapter
             mAdapter.notifyItemInserted(0);
+        }
+
+        // Skip first song since it is not included in the RecyclerView
+        for (int i = 1; i < mCuePointDescriptionList.size(); i++) {
+            if (track.equals(mCuePointDescriptionList.get(i))) {
+                // Decrement value of i to account for offset in RecyclerView
+                mAdapter.notifyItemChanged(i-1);
+            }
         }
     }
 
@@ -208,5 +218,10 @@ public class RecentlyPlayedFragment extends MediaBaseFragment implements
     public void onRefresh() {
         mCuePointHistory.request();
         mSwipeRefreshLayout.setEnabled(false);
+    }
+
+    @Override
+    public boolean onSongFavoriteUpdate(Favorite favorite) {
+        return maybeUpdateCurrentSongFavorite(favorite);
     }
 }

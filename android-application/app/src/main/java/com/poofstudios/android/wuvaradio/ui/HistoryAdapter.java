@@ -21,6 +21,12 @@ import java.util.List;
 
 public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHolder> {
 
+    // Interface to callback to fragment to access the metadata in the MediaSession
+    public interface OnSongFavoriteUpdateListener {
+        boolean onSongFavoriteUpdate(Favorite favorite);
+    }
+    private OnSongFavoriteUpdateListener mSongFavoriteUpdateListener;
+
     private FavoriteManager mFavoriteManager;
     private List<Track> mCuePointDescriptionList;
 
@@ -40,9 +46,10 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
         }
     }
 
-    public HistoryAdapter(Context context) {
+    public HistoryAdapter(Context context, OnSongFavoriteUpdateListener songFavoriteUpdateListener) {
         this.mCuePointDescriptionList = new ArrayList<>();
         mFavoriteManager = FavoriteManager.getFavoriteManager(context);
+        mSongFavoriteUpdateListener = songFavoriteUpdateListener;
     }
 
     public void setData(List<Track> data) {
@@ -74,7 +81,12 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 // isChecked is true when the song should be added to favorites
-                mFavoriteManager.setFavorite(favorite, isChecked);
+                // Check to see if the track associated with the favorite is the currently playing song
+                boolean songWasUpdated = mSongFavoriteUpdateListener.onSongFavoriteUpdate(favorite);
+                if (!songWasUpdated) {
+                    // If not, update the favorite in the favorite manager
+                    mFavoriteManager.setFavorite(favorite, isChecked);
+                }
             }
         });
 
