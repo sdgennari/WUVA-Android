@@ -1,0 +1,35 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    tools:context="com.poofstudios.android.wuvaradio.ui.AboutFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/padding_default">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scaleType="fitCenter"
+            android:paddingBottom="@dimen/padding_default"
+            android:src="@drawable/nash_icon_logo_horiz" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="@dimen/padding_default"
+            android:text="@string/acknowledgement_music_brainz"
+            style="@style/TextAppearance.AppTheme.Subtitle" />
+
+        <com.willowtreeapps.saguaro.android.widget.OpenSourceTextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextAppearance.AppTheme.Subtitle" />
+
+    </LinearLayout>
+
+</ScrollView>

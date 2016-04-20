@@ -30,6 +30,7 @@ public class MainActivity extends MediaBaseActivity implements
     private static final String NAV_RADIO = "Radio";
     private static final String NAV_FAVORITES = "Favorites";
     private static final String NAV_RECENTLY_PLAYED = "Recently Played";
+    private static final String NAV_ABOUT = "About";
 
     // Nav drawer
     private String[] mNavItems;
@@ -61,7 +62,7 @@ public class MainActivity extends MediaBaseActivity implements
         });
 
         // Nav drawer
-        mNavItems = new String[] {NAV_RADIO, NAV_FAVORITES, NAV_RECENTLY_PLAYED};
+        mNavItems = new String[] {NAV_RADIO, NAV_FAVORITES, NAV_RECENTLY_PLAYED, NAV_ABOUT};
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
         mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -108,6 +109,9 @@ public class MainActivity extends MediaBaseActivity implements
                 break;
             case NAV_RECENTLY_PLAYED:
                 fragment = new RecentlyPlayedFragment();
+                break;
+            case NAV_ABOUT:
+                fragment = new AboutFragment();
                 break;
             case NAV_RADIO:
             default:

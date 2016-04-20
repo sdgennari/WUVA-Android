@@ -30,4 +30,7 @@
     <string name="recently_played_error_message">There was an error retrieving the most recent songs from 92.7 Nash Icon.</string>
     <string name="recently_played_action_try_again">Try Again</string>
 
+    <!-- Acknowledgements -->
+    <string name="acknowledgement_music_brainz">Cover art images provided by MusicBrainz and the Cover Art Archive</string>
+
 </resources>

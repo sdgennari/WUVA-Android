@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="apache2_projects">
+        <item>Android Support Library</item>
+        <item>Android Design Support Library</item>
+        <item>Google Play Services</item>
+        <item>Picasso</item>
+        <item>Retrofit</item>
+        <item>Saguaro</item>
+    </string-array>
+</resources>
