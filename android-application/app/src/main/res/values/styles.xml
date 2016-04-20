@@ -64,4 +64,15 @@
         <item name="android:textColor">@color/lightTextColorSecondary</item>
     </style>
 
+    <style name="TextAppearance.AppTheme.EmptyTitle" parent="TextAppearance.AppCompat.Title">
+        <item name="android:textSize">@dimen/text_title</item>
+        <item name="android:textColor">@color/lightTextColorSecondary</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="TextAppearance.AppTheme.EmptyMessage" parent="TextAppearance.AppCompat.Title">
+        <item name="android:textSize">@dimen/text_subtitle</item>
+        <item name="android:textColor">@color/lightTextColorSecondary</item>
+    </style>
+
 </resources>

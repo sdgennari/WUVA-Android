@@ -28,7 +28,7 @@ import com.squareup.picasso.Target;
 public class MediaNotificationManager extends BroadcastReceiver {
 
     // Constants
-    public static final int NOTIFICATION_ID = 777;
+    public static final int NOTIFICATION_ID = 1;
     public static final int REQUEST_CODE = 100;
 
     // Actions

@@ -20,7 +20,8 @@ import android.widget.ListView;
 
 import com.poofstudios.android.wuvaradio.R;
 
-public class MainActivity extends MediaBaseActivity {
+public class MainActivity extends MediaBaseActivity implements
+        FavoriteFragment.OnRadioButtonPressedListener {
 
     private PlaybackControlsFragment mPlaybackControlsFragment;
     private CardView mPlaybackControlsContainer;
@@ -232,5 +233,12 @@ public class MainActivity extends MediaBaseActivity {
         if (mPlaybackControlsContainer != null) {
             mPlaybackControlsContainer.setVisibility(View.VISIBLE);
         }
+    }
+
+    @Override
+    public void onRadioButtonPressed() {
+        // Set the RadioFragment as the main screen
+        // Do this by pseudo-selecting the item in the nav drawer to fully update the UI
+        selectNavItem(0);
     }
 }

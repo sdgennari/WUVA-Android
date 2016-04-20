@@ -11,6 +11,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.poofstudios.android.wuvaradio.R;
 import com.poofstudios.android.wuvaradio.RadioPlayback;
@@ -35,6 +38,7 @@ public class RecentlyPlayedFragment extends MediaBaseFragment implements
     private HistoryAdapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
     private CuePointHistory mCuePointHistory;
+    private ViewGroup mErrorLayout;
 
     private List<Track> mCuePointDescriptionList;
     private ArrayDeque<Track> mPendingCoverArtRequests;
@@ -70,6 +74,24 @@ public class RecentlyPlayedFragment extends MediaBaseFragment implements
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_recently_played, container, false);
+
+        // Set up the error layout
+        mErrorLayout = (ViewGroup) rootView.findViewById(R.id.error_layout);
+
+        TextView errorTitleView = (TextView) mErrorLayout.findViewById(R.id.error_title);
+        errorTitleView.setText(getString(R.string.recently_played_error_title));
+
+        TextView errorMessageView = (TextView) mErrorLayout.findViewById(R.id.error_message);
+        errorMessageView.setText(getString(R.string.recently_played_error_message));
+
+        Button tryAgainButton = (Button) mErrorLayout.findViewById(R.id.error_action);
+        tryAgainButton.setText(getString(R.string.recently_played_action_try_again));
+        tryAgainButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                refreshRecentlyPlayedList();
+            }
+        });
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swiperefresh_layout);
         mSwipeRefreshLayout.setOnRefreshListener(this);
@@ -143,6 +165,9 @@ public class RecentlyPlayedFragment extends MediaBaseFragment implements
         mAdapter.setData(mCuePointDescriptionList);
         mAdapter.notifyDataSetChanged();
 
+        // Hide the error state
+        updateErrorState();
+
         // Re-enable the SwipeRefreshLayout
         mSwipeRefreshLayout.setRefreshing(false);
         mSwipeRefreshLayout.setEnabled(true);
@@ -153,7 +178,8 @@ public class RecentlyPlayedFragment extends MediaBaseFragment implements
 
     @Override
     public void onCuePointHistoryFailed(CuePointHistory cuePointHistory, int errorCode) {
-        // TODO Show error state
+        // Show the error state
+        updateErrorState();
 
         // Re-enable the SwipeRefreshLayout
         mSwipeRefreshLayout.setRefreshing(false);
@@ -216,6 +242,10 @@ public class RecentlyPlayedFragment extends MediaBaseFragment implements
 
     @Override
     public void onRefresh() {
+        refreshRecentlyPlayedList();
+    }
+
+    private void refreshRecentlyPlayedList() {
         mCuePointHistory.request();
         mSwipeRefreshLayout.setEnabled(false);
     }
@@ -223,5 +253,15 @@ public class RecentlyPlayedFragment extends MediaBaseFragment implements
     @Override
     public boolean onSongFavoriteUpdate(Favorite favorite) {
         return maybeUpdateCurrentSongFavorite(favorite);
+    }
+
+    private void updateErrorState() {
+        if (mAdapter.getItemCount() <= 0) {
+            mErrorLayout.setVisibility(View.VISIBLE);
+            mRecyclerView.setVisibility(View.GONE);
+        } else {
+            mErrorLayout.setVisibility(View.GONE);
+            mRecyclerView.setVisibility(View.VISIBLE);
+        }
     }
 }
