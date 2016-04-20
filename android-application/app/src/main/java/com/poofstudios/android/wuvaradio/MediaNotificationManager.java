@@ -202,10 +202,10 @@ public class MediaNotificationManager extends BroadcastReceiver {
         setNotificationPlaybackState(builder);
 
         // Load the image async with Picasso
-//        if (description.getIconUri() != null) {
-//            loadCoverArtImage(builder, contentView, expandedView,
-//                    description.getIconUri().toString());
-//        }
+        if (description.getIconUri() != null) {
+            loadCoverArtImage(builder, contentView, null,
+                    description.getIconUri().toString());
+        }
 
         // Set the custom content views for the notification
         Notification notification = builder.build();
@@ -286,12 +286,16 @@ public class MediaNotificationManager extends BroadcastReceiver {
                 Log.d("====", "onBitmapLoaded");
                 // Add the image to the remote views
                 remoteView.setImageViewBitmap(R.id.image, bitmap);
-                expandedView.setImageViewBitmap(R.id.image, bitmap);
+                if (expandedView != null) {
+                    expandedView.setImageViewBitmap(R.id.image, bitmap);
+                }
 
                 // Update the notification
                 Notification notification = builder.build();
                 notification.contentView = remoteView;
-                notification.bigContentView = expandedView;
+                if (expandedView != null) {
+                    notification.bigContentView = expandedView;
+                }
                 mNotificationManager.notify(NOTIFICATION_ID, notification);
             }
 
