@@ -63,6 +63,9 @@ public class RadioFragment extends MediaBaseFragment {
         mCoverArtView = (ImageView) rootView.findViewById(R.id.cover_art);
         mTitleView = (TextView) rootView.findViewById(R.id.title);
         mArtistView = (TextView) rootView.findViewById(R.id.artist);
+
+        mTitleView.setText(getString(R.string.default_text));
+
         mBackgroundImage = (ImageView) rootView.findViewById(R.id.background_image);
         mStartStopButton = (ToggleButton) rootView.findViewById(R.id.start_stop_button);
         mStartStopButton.setOnClickListener(new View.OnClickListener() {
@@ -134,8 +137,8 @@ public class RadioFragment extends MediaBaseFragment {
         // Update the UI based on the current playback state
         switch(playbackState.getState()) {
             case PlaybackStateCompat.STATE_CONNECTING:
-                mArtistView.setText("Connecting...");
-                mTitleView.setText("");
+                mArtistView.setText("");
+                mTitleView.setText("Connecting...");
                 mStartStopButton.setChecked(true);
                 break;
             case PlaybackStateCompat.STATE_PLAYING:
@@ -143,9 +146,13 @@ public class RadioFragment extends MediaBaseFragment {
                 mStartStopButton.setChecked(true);
                 break;
             case PlaybackStateCompat.STATE_STOPPED:
-                mArtistView.setText("Playback stopped.");
-                mTitleView.setText("");
+                mArtistView.setText("");
+                mTitleView.setText("Playback stopped.");
                 mStartStopButton.setChecked(false);
+
+                Picasso.with(getActivity()).load(R.drawable.cover_art_placeholder).fit().centerInside().into(mCoverArtView);
+                mBackgroundImage.setImageResource(R.color.darkColorPrimaryDark);
+
                 break;
             default:
                 Log.d("WUVA", "Unhandled state " + playbackState.getState());
