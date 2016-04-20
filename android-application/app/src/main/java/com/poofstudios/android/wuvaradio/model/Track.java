@@ -1,6 +1,5 @@
 package com.poofstudios.android.wuvaradio.model;
 
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;

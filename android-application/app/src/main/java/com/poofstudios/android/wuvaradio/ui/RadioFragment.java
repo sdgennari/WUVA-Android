@@ -2,18 +2,12 @@ package com.poofstudios.android.wuvaradio.ui;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.RatingCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -125,7 +119,7 @@ public class RadioFragment extends MediaBaseFragment {
             Picasso.with(context).load(R.drawable.cover_art_placeholder).into(mCoverArtView);
         }
 
-        Log.d("url", "Cover art: " + mCoverArtUrl);
+        //Log.d("url", "Cover art: " + mCoverArtUrl);
     }
 
     private void startService() {
@@ -175,7 +169,7 @@ public class RadioFragment extends MediaBaseFragment {
                 break;
 
             default:
-                Log.d("WUVA", "Unhandled state " + playbackState.getState());
+                Log.w("WUVA", "Unhandled state " + playbackState.getState());
         }
 
         // Can handle other button visibility with playbackState.getActions() or
@@ -217,7 +211,7 @@ public class RadioFragment extends MediaBaseFragment {
 
     @Override
     protected void updateMediaDescription(MediaDescriptionCompat description) {
-        Log.d("====", "updateMediaDescription");
+        //Log.d("====", "updateMediaDescription");
         if (description == null) {
             return;
         }

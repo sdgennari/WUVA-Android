@@ -283,7 +283,7 @@ public class MediaNotificationManager extends BroadcastReceiver {
         mTarget = new Target() {
             @Override
             public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                Log.d("====", "onBitmapLoaded");
+                //Log.d("====", "onBitmapLoaded");
                 // Add the image to the remote views
                 remoteView.setImageViewBitmap(R.id.image, bitmap);
                 if (expandedView != null) {
@@ -301,7 +301,6 @@ public class MediaNotificationManager extends BroadcastReceiver {
 
             @Override
             public void onBitmapFailed(Drawable errorDrawable) {
-                Log.d("====", "failed");
             }
 
             @Override

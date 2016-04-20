@@ -19,7 +19,6 @@ public class RadioPlayback implements MediaPlayer.OnCuePointReceivedListener,
     public static final String CUE_TITLE = "cue_title";
     public static final String TRACK_ARTIST_NAME = "track_artist_name";
 
-    // TODO Get actual Broadcaster and Name from WUVA
     public static final String STATION_BROADCASTER = "WUVA";
     public static final String STATION_NAME = "WUVA";
     public static final String STATION_MOUNT = "WUVA";

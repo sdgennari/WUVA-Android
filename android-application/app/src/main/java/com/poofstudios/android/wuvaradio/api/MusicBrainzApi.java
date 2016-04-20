@@ -1,8 +1,5 @@
 package com.poofstudios.android.wuvaradio.api;
 
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.logging.HttpLoggingInterceptor;
-
 import retrofit.GsonConverterFactory;
 import retrofit.Retrofit;
 

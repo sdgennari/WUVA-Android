@@ -12,7 +12,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.poofstudios.android.wuvaradio.R;
@@ -212,9 +211,12 @@ public class RecentlyPlayedFragment extends MediaBaseFragment implements
                 public void onResult(@Nullable String coverArtUrl) {
                     if (coverArtUrl != null) {
                         addCoverArtUrlToTrack(track, coverArtUrl);
-                    } else {
+                    }
+                    /*
+                    else {
                         Log.d("====", track.getTitle() + " by " + track.getArtist() + " has null coverArtUrl");
                     }
+                    */
                 }
             });
         } else {

@@ -56,7 +56,7 @@ public abstract class MediaBaseActivity extends AppCompatActivity {
      * @param token token from the current MediaSession
      */
     protected void connectToSession(MediaSessionCompat.Token token) {
-        Log.d("====", "connectToSession");
+        // Log.d("====", "connectToSession");
         try {
             MediaControllerCompat mediaController = new MediaControllerCompat(MediaBaseActivity.this, token);
             setSupportMediaController(mediaController);
@@ -86,7 +86,7 @@ public abstract class MediaBaseActivity extends AppCompatActivity {
     private ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.d("====", "onServiceConnected");
+            // Log.d("====", "onServiceConnected");
             mService = ((RadioPlayerService.LocalBinder) service).getService();
             mServiceBound = true;
 

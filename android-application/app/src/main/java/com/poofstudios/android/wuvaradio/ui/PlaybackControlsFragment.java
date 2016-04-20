@@ -113,7 +113,7 @@ public class PlaybackControlsFragment extends MediaBaseFragment {
                     startPlayback();
                     break;
                 default:
-                    Log.d("WUVA", "Unhandled playback state in PlaybackControlsFragment");
+                    Log.e("WUVA", "Unhandled playback state in PlaybackControlsFragment");
             }
 
         }

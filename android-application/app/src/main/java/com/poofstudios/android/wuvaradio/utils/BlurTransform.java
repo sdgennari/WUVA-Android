@@ -34,7 +34,7 @@ public class BlurTransform implements Transformation {
         Bitmap blurredBitmap = Bitmap.createBitmap(source);
 
         // Allocate memory for Renderscript to work with
-        Allocation input = Allocation.createFromBitmap(rs, source, Allocation.MipmapControl.MIPMAP_FULL, Allocation.USAGE_SHARED);
+        Allocation input = Allocation.createFromBitmap(rs, source);
         Allocation output = Allocation.createTyped(rs, input.getType());
 
         // Load up an instance of the specific script that we want to use.

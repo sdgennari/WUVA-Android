@@ -102,7 +102,7 @@ public class RadioPlayerService extends Service implements
             if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
                 mPlayback.play();
             } else {
-                Log.d("WUVA", "AudioFocus Gain Not Granted");
+                Log.w("WUVA", "AudioFocus Gain Not Granted");
             }
         }
         return START_NOT_STICKY;
@@ -137,7 +137,7 @@ public class RadioPlayerService extends Service implements
                 mPlayback.stop();
                 mPlayback.release();
             } else {
-                Log.d("WUVA", "AudioFocus Abandon Not Granted");
+                Log.w("WUVA", "AudioFocus Abandon Not Granted");
             }
         }
         stopForeground(true);
@@ -174,7 +174,7 @@ public class RadioPlayerService extends Service implements
      * @param coverArtUrl url for the cover art image
      */
     private void addCoverArtUrlToMetadata(String coverArtUrl) {
-        Log.d("====", "addCoverArtUrlToMetadata");
+        //Log.d("====", "addCoverArtUrlToMetadata");
 
         // Transfer the old metadata to a new metadata object
         MediaMetadataCompat.Builder metadataBuilder = new MediaMetadataCompat.Builder(
@@ -208,7 +208,7 @@ public class RadioPlayerService extends Service implements
      * @param metadata new metadata for the session
      */
     private void updateMediaSessionMetadata(MediaMetadataCompat metadata) {
-        Log.d("====", "updateMediaSessionMetadata");
+        //Log.d("====", "updateMediaSessionMetadata");
         // Update the metadata for the session
         mMediaSession.setMetadata(metadata);
 
@@ -235,7 +235,7 @@ public class RadioPlayerService extends Service implements
      * deals with the controls available to the user (play, stop, favorite, etc.)
      */
     private void updatePlaybackState() {
-        Log.d("====", "updatePlaybackState " + mPlayback.getState());
+        //Log.d("====", "updatePlaybackState " + mPlayback.getState());
         PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder();
         stateBuilder.setActions(PLAYBACK_ACTIONS);
 
@@ -306,7 +306,7 @@ public class RadioPlayerService extends Service implements
      */
     @Override
     public void onMetadataChanged(MediaMetadataCompat metadata) {
-        Log.d("====", "onMetadataChanged");
+        //Log.d("====", "onMetadataChanged");
         updateMediaSessionMetadata(metadata);
     }
 
@@ -337,7 +337,7 @@ public class RadioPlayerService extends Service implements
          */
         @Override
         public void onStop() {
-            Log.d("====", "MediaSessionCallback onStop");
+            //Log.d("====", "MediaSessionCallback onStop");
             mPlayback.stop();
             mPlayback.release();
 
