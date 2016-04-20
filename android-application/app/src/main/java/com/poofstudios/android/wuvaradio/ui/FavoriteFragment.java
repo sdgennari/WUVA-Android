@@ -170,5 +170,8 @@ public class FavoriteFragment extends MediaBaseFragment {
     protected void updateMediaDescription(MediaDescriptionCompat description) {
         // Refresh the data in the adapter
         mAdapter.updateData();
+
+        // Update the empty state
+        updateEmptyState();
     }
 }

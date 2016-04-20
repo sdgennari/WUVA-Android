@@ -94,8 +94,7 @@ public class RadioFragment extends MediaBaseFragment {
             }
         });
 
-        Picasso.with(getActivity()).load(R.drawable.placeholder_background)
-                .transform(new BlurTransform(getActivity())).into(mBackgroundImage);
+        Picasso.with(getActivity()).load(R.drawable.placeholder_background).into(mBackgroundImage);
         Picasso.with(getActivity()).load(R.drawable.cover_art_placeholder).into(mCoverArtView);
 
         return rootView;
@@ -110,10 +109,19 @@ public class RadioFragment extends MediaBaseFragment {
 
         Context context = getActivity();
         if(context != null && mCoverArtUrl != null && !mCoverArtUrl.isEmpty()) {
-            Picasso.with(context).load(mCoverArtUrl).placeholder(R.drawable.cover_art_placeholder).fit().centerInside().into(mCoverArtView);
-            Picasso.with(context).load(mCoverArtUrl).transform(new BlurTransform(context)).into(mBackgroundImage);
+            Picasso.with(context).load(mCoverArtUrl)
+                    .placeholder(R.drawable.cover_art_placeholder)
+                    .error(R.drawable.cover_art_placeholder)
+                    .fit()
+                    .centerInside()
+                    .into(mCoverArtView);
+            Picasso.with(context).load(mCoverArtUrl)
+                    .transform(new BlurTransform(context))
+                    .placeholder(R.drawable.placeholder_background)
+                    .error(R.drawable.placeholder_background)
+                    .into(mBackgroundImage);
         } else if (context != null) {
-            Picasso.with(context).load(R.drawable.placeholder_background).transform(new BlurTransform(context)).into(mBackgroundImage);
+            Picasso.with(context).load(R.drawable.placeholder_background).into(mBackgroundImage);
             Picasso.with(context).load(R.drawable.cover_art_placeholder).into(mCoverArtView);
         }
 
@@ -138,29 +146,56 @@ public class RadioFragment extends MediaBaseFragment {
         switch(playbackState.getState()) {
             case PlaybackStateCompat.STATE_CONNECTING:
                 mArtistView.setText("");
-                mTitleView.setText("Connecting...");
+                if (getActivity() != null) {
+                    mTitleView.setText(getString(R.string.player_connecting));
+                }
                 mStartStopButton.setChecked(true);
                 break;
+
             case PlaybackStateCompat.STATE_PLAYING:
+                getInfoFromMetadata();
                 updateUI();
                 mStartStopButton.setChecked(true);
                 break;
+
             case PlaybackStateCompat.STATE_STOPPED:
+            case PlaybackStateCompat.STATE_NONE:
                 mArtistView.setText("");
-                mTitleView.setText("Playback stopped.");
+                if (getActivity() != null) {
+                    mTitle = getString(R.string.player_stopped);
+                }
+                mArtist = "";
+                mCoverArtUrl = "";
+                mTitleView.setText(mTitle);
                 mStartStopButton.setChecked(false);
-
-                Picasso.with(getActivity()).load(R.drawable.cover_art_placeholder).fit().centerInside().into(mCoverArtView);
-                mBackgroundImage.setImageResource(R.color.darkColorPrimaryDark);
-
+                Picasso.with(getActivity()).load(R.drawable.cover_art_placeholder)
+                        .into(mCoverArtView);
+                Picasso.with(getActivity()).load(R.drawable.placeholder_background)
+                        .into(mBackgroundImage);
                 break;
+
             default:
                 Log.d("WUVA", "Unhandled state " + playbackState.getState());
         }
 
-
         // Can handle other button visibility with playbackState.getActions() or
         // playbackState.getCustomActions()
+    }
+
+    private void getInfoFromMetadata() {
+        if (getActivity() != null && getActivity().getSupportMediaController() != null) {
+            MediaMetadataCompat metadata = getActivity().getSupportMediaController().getMetadata();
+            if (metadata != null && metadata.getDescription() != null) {
+                MediaDescriptionCompat description = metadata.getDescription();
+                mTitle = description.getTitle().toString();
+                mArtist = description.getSubtitle().toString();
+                if (description.getIconUri() != null) {
+                    mCoverArtUrl = description.getIconUri().toString();
+                } else {
+                    mCoverArtUrl = "";
+                }
+            }
+        }
     }
 
     private void updateFavoriteButton() {

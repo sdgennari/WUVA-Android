@@ -26,6 +26,7 @@ public abstract class MediaBaseFragment extends Fragment {
         }
     };
 
+    @Override
     public void onStart() {
         super.onStart();
         if (getActivity() != null && getActivity().getSupportMediaController() != null) {
@@ -37,11 +38,13 @@ public abstract class MediaBaseFragment extends Fragment {
         MediaControllerCompat controller = getActivity().getSupportMediaController();
         if (controller != null) {
             controller.registerCallback(mControllerCallback);
-            if (controller.getPlaybackState() != null) {
-                updatePlaybackState(controller.getPlaybackState());
-            }
             if (controller.getMetadata() != null) {
                 updateMediaDescription(controller.getMetadata().getDescription());
+            }
+            // Update playback state second since some screens may need to hide metadata based on
+            // current playback state
+            if (controller.getPlaybackState() != null) {
+                updatePlaybackState(controller.getPlaybackState());
             }
         }
     }

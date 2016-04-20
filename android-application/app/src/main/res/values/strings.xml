@@ -8,6 +8,9 @@
     <string name="title_favorite">Favorites</string>
     <string name="title_recently_played">Recently Played</string>
 
+    <string name="player_connecting">Connecting…</string>
+    <string name="player_stopped">Playback Stopped</string>
+
     <!-- Actions -->
     <string name="action_play">Play</string>
     <string name="action_stop">Stop</string>
