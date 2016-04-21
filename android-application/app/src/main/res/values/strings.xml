@@ -22,8 +22,8 @@
     <string name="cover_art_alt_text">Cover Art</string>
 
     <!-- Empty Screens -->
-    <string name="favorite_empty_title">You have no favorite songs (yet!)</string>
-    <string name="favorite_empty_message">Head to the radio player to listen live to 92.7 Nash Icon and find songs you enjoy.</string>
+    <string name="favorite_empty_title">You have no favorite songs (yet)</string>
+    <string name="favorite_empty_message">Head to the radio player to listen to 92.7 Nash Icon live and find songs you enjoy.</string>
     <string name="favorite_empty_action_radio">Tune In Now</string>
 
     <string name="recently_played_error_title">Oops, no recently played songs available</string>

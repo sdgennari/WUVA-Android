@@ -248,8 +248,9 @@ public class RecentlyPlayedFragment extends MediaBaseFragment implements
     }
 
     private void refreshRecentlyPlayedList() {
-        mCuePointHistory.request();
         mSwipeRefreshLayout.setEnabled(false);
+        mSwipeRefreshLayout.setRefreshing(true);
+        mCuePointHistory.request();
     }
 
     @Override
